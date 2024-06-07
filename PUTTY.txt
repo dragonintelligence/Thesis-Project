@@ -1,0 +1,38 @@
+Commands to run every time i open PuTTy session:
+ssh mdr317@fs0.das5.cs.vu.nl
+module load slurm/17.02.2
+cd /var/scratch/mdr317
+
+Activating conda:
+source /var/scratch/mdr317/miniconda3/bin/activate
+conda activate
+
+Loading CUDA:
+module load cuda12.1/toolkit/12.1
+module load cuDNN/cuda12.1/9.1.0.70
+
+Script template:
+#!/bin/bash
+#SBATCH --job-name=test
+#SBATCH --time=00:10:00
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=1
+#SBATCH --partition=defq
+#SBATCH --gres=gpu:1
+module load cuda12.1/toolkit/12.1
+module load cuDNN/cuda12.1/9.1.0.70
+source /var/scratch/mdr317/miniconda3/bin/activate
+conda activate
+cd /var/scratch/mdr317/experiments
+echo $$
+mkdir o`echo $$`
+cd o`echo $$`
+
+python <<EOF
+
+"""
+Python code goes here
+"""
+
+EOF
+
