@@ -37,11 +37,11 @@ TEST_TOTAL_PATCHES: int = 64000
 EMBEDDING_SIZE: int = 100
 ATTENTION_HEADS: int = 12 # from paper ViT-Base
 FF: int = 4 # from paper ViT-Base
-DROPOUT: float = 0.0
+DROPOUT: float = 0.0 # from paper ViT
 DEPTH: int = 12 # from paper ViT-Base
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 5
-LEARNING_RATE: float = 0.001
+NUM_EPOCHS: int = 7 # from paper ViT
+LEARNING_RATE: float = 0.0008 # from paper ViT
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Data
@@ -64,7 +64,7 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
     
     for epoch in range(nr_epochs):
         running_loss: float = 0.0
-        for i, data in enumerate(dataloader[0:100], 0):
+        for i, data in enumerate(dataloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             inputs = inputs.type(torch.LongTensor).to(device)
@@ -82,8 +82,8 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
 
             # print statistics
             running_loss += loss.item()
-            if i % 50 == 49:
-                print(f'Epoch {epoch + 1} loss: {running_loss / 50:.3f}')
+            if i == nr_train_batches - 1:
+                print(f'Epoch {epoch + 1} loss: {running_loss / (i+1):.3f}')
                 running_loss = 0.0
 
     print('Finished Training')

@@ -35,7 +35,7 @@ def images_to_patches(images, patch_size, image_size, channels, embedding_size, 
         # Convert to tensor
         new_image = torch.stack(new_image, dim = 0).view((i // p) ** 2, c * (p**2)).to(device)
         # Linear embedding to a lower dimension
-        embedding = nn.Linear(patch_dim, embedding_size)
+        embedding = nn.Linear(patch_dim, embedding_size).to(device)
         new_image = embedding(new_image.to(torch.float)).to(device)
         # Append image
         new_batch.append(new_image)
