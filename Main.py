@@ -34,14 +34,14 @@ TRAIN_BATCH_SIZE: int = 100
 TEST_BATCH_SIZE: int = 1000
 TRAIN_TOTAL_PATCHES: int = 6400
 TEST_TOTAL_PATCHES: int = 64000
-EMBEDDING_SIZE: int = 100
+EMBEDDING_SIZE: int = 200
 ATTENTION_HEADS: int = 12 # from paper ViT-Base
 FF: int = 4 # from paper ViT-Base
 DROPOUT: float = 0.0 # from paper ViT
 DEPTH: int = 12 # from paper ViT-Base
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 7 # from paper ViT
-LEARNING_RATE: float = 0.0008 # from paper ViT
+NUM_EPOCHS: int = 25
+LEARNING_RATE: float = 0.00001
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Data
