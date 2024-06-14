@@ -43,7 +43,7 @@ NR_CLASSES: int = 2
 NUM_EPOCHS: int = 2
 LEARNING_RATE: float = 0.00001
 CRITERION = nn.CrossEntropyLoss()
-MODEL: int = "Perceiver"
+MODEL: int = "ViT"
 
 # Training Function
 def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
@@ -120,7 +120,7 @@ def experiment(model: str) -> None:
 
     #  Training Loop
     if model == "ViT":
-        desired_net = Eaticx.Transformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+        desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PATCH_SIZE, VIT_EMB, VIT_HEADS, FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
