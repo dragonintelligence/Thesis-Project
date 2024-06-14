@@ -20,6 +20,7 @@ def access_data(data_type: str, source: str, device: str) -> tuple:
     # Initialization
     instances: list = []
     labels: list = []
+    transform = torchvision.transforms.ToTensor()
 
     # Extracting images from their respective folders
     for folder in ["FAKE", "REAL"]:
@@ -27,8 +28,8 @@ def access_data(data_type: str, source: str, device: str) -> tuple:
         index: int = 0
         for file in os.listdir(path):
             labels.append(0 if folder == "REAL" else 1)
-            image = torchvision.io.read_image(os.path.join(path, file)).to(device)
-            image = F.normalize(image.to(torch.float), dim=2)
+            image = Image.open(os.path.join(path, file))
+            image = transform(image).to(device)
             instances.append(image)
             index += 1
             if index % 10000 == 0:
