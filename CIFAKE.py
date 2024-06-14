@@ -6,6 +6,7 @@ import torch
 import random
 import torchvision
 from PIL import Image
+import torchvision.transforms as transforms
 
 # Function for accessing the dataset of a certain type (train/test)
 def access_data(data_type: str, source: str, device: str) -> tuple:
@@ -20,7 +21,7 @@ def access_data(data_type: str, source: str, device: str) -> tuple:
     # Initialization
     instances: list = []
     labels: list = []
-    transform = torchvision.transforms.ToTensor()
+    transform = transforms.ToTensor()
 
     # Extracting images from their respective folders
     for folder in ["FAKE", "REAL"]:
