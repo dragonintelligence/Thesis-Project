@@ -16,9 +16,8 @@ except:
     DATA_PATH = os.path.join(os.getcwd(), "data")
 
 # Importing scripts
-import CIFAKE
-import EaticxTransformer
-import EaticxPerceiver
+import CIFAKE # the dataset loading functions
+import Eaticx # the neural network objects
 
 # Importing more libraries
 import torch
@@ -32,25 +31,19 @@ CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 100
-EMBEDDING_SIZE: int = 200
-ATTENTION_HEADS: int = 12 # from paper ViT-Base
+VIT_EMB: int = 200
+VIT_HEADS: int = 12 # from paper ViT-Base
 FF: int = 4 # from paper ViT-Base
-DEPTH: int = 12 # from paper ViT-Base
+VIT_DEPTH: int = 12 # from paper ViT-Base
+VIT_EMB: int = 100
+VIT_LAT: int = 200
+PER_HEADS: int = 6
+PER_DEPTH: int = 8
 NR_CLASSES: int = 2
 NUM_EPOCHS: int = 100
 LEARNING_RATE: float = 0.00001
 CRITERION = nn.CrossEntropyLoss()
-
-
-print("Start loading training images for the VisionTransformer model")
-print()
-
-# Training Data
-xtrain, ytrain = CIFAKE.access_data("train", DATA_PATH, DEVICE)
-xtrain, ytrain = CIFAKE.shuffle_dataset(xtrain, ytrain)
-train_dataloader = CIFAKE.batch_data(xtrain, ytrain, BATCH_SIZE, DEVICE)
-
-print()
+MODEL: int = "ViT"
 
 # Training Function
 def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
@@ -97,7 +90,7 @@ print()
 
 # Test Accuracy Function
 
-def accuracy_test(net) -> None:
+def accuracy_test(net, name) -> None:
     correct: int = 0
     total: int = 0
 
@@ -111,20 +104,36 @@ def accuracy_test(net) -> None:
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print(f'Accuracy of the VisionTransformer on the 20000 test images: {100 * correct // total} %')
+    print(f'Accuracy of the {name} on the 20000 test images: {100 * correct // total} %')
 
+def experiment(model: str) -> None:
 
-# TRANSFORMER Training Loop
-desired_net = EaticxTransformer.Transformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-    PATCH_SIZE, EMBEDDING_SIZE, ATTENTION_HEADS, FF, DEPTH, NR_CLASSES).to(DEVICE)
-desired_net_name: str = "transformer"
-train(desired_net, desired_net_name, train_dataloader, NUM_EPOCHS, CRITERION, \
-    LEARNING_RATE, DEVICE)
+    print(f"Start loading training images for the {model} model")
+    print()
 
-# TRANSFORMER Test Accuracy 
-xtest, ytest = CIFAKE.access_data("test", DATA_PATH, DEVICE)
-xtest, ytest = CIFAKE.shuffle_dataset(xtest, ytest)
-test_dataloader = CIFAKE.batch_data(xtest, ytest, BATCH_SIZE, DEVICE)
-PATH: str = f'./eaticx-{desired_net_name}.pth'
-desired_net.load_state_dict(torch.load(PATH))
-accuracy_test(desired_net)
+    # Training Data
+    xtrain, ytrain = CIFAKE.access_data("train", DATA_PATH, DEVICE)
+    xtrain, ytrain = CIFAKE.shuffle_dataset(xtrain, ytrain)
+    train_dataloader = CIFAKE.batch_data(xtrain, ytrain, BATCH_SIZE, DEVICE)
+
+    print()
+
+    #  Training Loop
+    if model == "ViT":
+        desired_net = Eaticx.Transformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+            PATCH_SIZE, VIT_EMB, VIT_HEADS, FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+    elif model == "Perceiver":
+        desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+    PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
+    train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
+        LEARNING_RATE, DEVICE)
+
+    # Test Accuracy 
+    xtest, ytest = CIFAKE.access_data("test", DATA_PATH, DEVICE)
+    xtest, ytest = CIFAKE.shuffle_dataset(xtest, ytest)
+    test_dataloader = CIFAKE.batch_data(xtest, ytest, BATCH_SIZE, DEVICE)
+    PATH: str = f'./eaticx-{model}.pth'
+    desired_net.load_state_dict(torch.load(PATH))
+    accuracy_test(desired_net, model)
+
+experiment(MODEL)

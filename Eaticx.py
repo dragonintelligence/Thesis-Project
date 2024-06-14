@@ -1,134 +1,20 @@
-# This is to be used only if importing the separate scripts doesn't work
+## The library of modules & neural network objects
 
-# Init based on platform / device
-import os
-import sys
-
-try:
-    from google.colab import drive
-    COLAB: bool = True
-    drive.mount('/content/drive')
-    sys.path.append('/content/drive/My Drive/Colab Notebooks')
-    DATA_PATH = os.path.join(sys.path[-1], "Dataset")
-except:
-    COLAB: bool = False
-    sys.path.append(os.getcwd())
-    DATA_PATH = os.path.join(os.getcwd(), "data")
-
-# Importing more libraries
-import math
+# Imports
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim import Adam
-import random
-import torchvision
-from PIL import Image
+import math
 
-# Constants
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-CHANNELS: int = 3
-IMG_SIZE: int = 32
-PATCH_SIZE: int = 4
-TRAIN_BATCH_SIZE: int = 100
-TEST_BATCH_SIZE: int = 1000
-TRAIN_TOTAL_PATCHES: int = 6400
-TEST_TOTAL_PATCHES: int = 64000
-EMBEDDING_SIZE: int = 100
-ATTENTION_HEADS: int = 12 # from paper ViT-Base
-FF: int = 4 # from paper ViT-Base
-DROPOUT: float = 0.0
-DEPTH: int = 12 # from paper ViT-Base
-NR_CLASSES: int = 2
-NUM_EPOCHS: int = 5
-LEARNING_RATE: float = 0.001
-CRITERION = nn.CrossEntropyLoss()
-
-# Function for accessing the dataset of a certain type (train/test)
-def access_data(data_type: str, source: str, device: str) -> tuple:
-    """
-    Function that reads the folders of image data & generates a list of image 
-    tensors and a list of labels (0 if real image, 1 if AI-generated image) for
-    a given dataset
-    Parameters: type of dataset (string, train or test), path, device
-    Returns: resulting list of inputs (tensors) and list of labels (int)
-    """
-
-    # Initialization
-    instances: list = []
-    labels: list = []
-
-    # Extracting images from their respective folders
-    for folder in ["FAKE", "REAL"]:
-        path: str = os.path.join(source, data_type, folder)
-        index: int = 0
-        for file in os.listdir(path):
-            labels.append(0 if folder == "REAL" else 1)
-            instances.append(torchvision.io.read_image(os.path.join(path, file)).to(device))
-            index += 1
-            if index % 10000 == 0:
-                print(f"- {index} {folder} images accessed.")
-        print(f"All {folder} images are accessed.")
-        print()
-
-    # Returning resulting dataset
-    print("All images are accessed.")
-    return instances, labels
-
-# Function for shuffling the data (otherwise it would have all fake data first and all 
-# real data second)
-def shuffle_dataset(inputs: list, labels: list) -> tuple:
-    """
-    Function that takes a list of input tensors and a list of labels, shuffles
-    their order (while keeping the inputs and their respective labels on the
-    same index) and returns the result
-    Parameters: 
-    """
-
-    # Asserts
-    assert len(inputs) == len(labels), f"The number of inputs ({len(inputs)}) and \
-        that of labels ({len(labels)}) don't match."
-    
-    # Dictionary that keeps maps inputs to labels
-    order: dict = {inputs[i]: labels[i] for i in range(len(inputs))}
-
-    # Shuffling datasets
-    random.shuffle(inputs)
-    labels = [order[instance] for instance in inputs]
-
-    # Returning resulting dataset
-    return inputs, labels
-
-# Function for splitting dataset into batches and returning a dataloader
-def batch_data(inputs: list, labels: list, batch_size: int, device: str) -> list:
-
-    # Asserts
-    assert len(inputs) == len(labels), f"The number of inputs ({len(inputs)}) and \
-        that of labels ({len(labels)}) don't match."
-    assert len(inputs) % batch_size == 0, f"The dataset size ({len(inputs)}) is not \
-        divisible by the batch size ({batch_size})."
-
-    # Initialization
-    dataloader: list = []
-
-    # Batching
-    for i in range(0, len(inputs), batch_size):
-        x = torch.stack(inputs[i : i + batch_size], dim=0).to(device)
-        y = torch.tensor(labels[i : i + batch_size]).to(device)
-        dataloader.append((x, y))
-    
-    # Return resulting dataset
-    return dataloader
-
-## Vision Transformer Architecture
-
+# 1) Functions
 
 # Image Patching Function
 def images_to_patches(images, patch_size, image_size, channels, embedding_size, device):
     """
     Function that splits the images from a batch in patches of a given size,
     then flattens the patches across all channels into linear vectors.
-    Parameters: the batch of images, the patch size
+    Parameters: the batch of images, the patch size, image size, channels,
+    embedding size, device
     Returns: new tensor representing the batch of patched images
     """
 
@@ -151,7 +37,7 @@ def images_to_patches(images, patch_size, image_size, channels, embedding_size, 
         # Convert to tensor
         new_image = torch.stack(new_image, dim = 0).view((i // p) ** 2, c * (p**2)).to(device)
         # Linear embedding to a lower dimension
-        embedding = nn.Linear(patch_dim, embedding_size)
+        embedding = nn.Linear(patch_dim, embedding_size).to(device)
         new_image = embedding(new_image.to(torch.float)).to(device)
         # Append image
         new_batch.append(new_image)
@@ -160,6 +46,50 @@ def images_to_patches(images, patch_size, image_size, channels, embedding_size, 
     # Return final output
     return new_batch
 
+
+# 2) Modules
+
+# Cross Attention Module
+class CrossAttention(nn.Module):
+    def __init__(self, embedding_size: int, latent_size: int) -> None:
+        """
+        Initializing (multi-headed) Self Attention object.
+        Parameters: embedding size (from real input), latent size
+        """
+        # Initialization
+        super().__init__()
+
+        # Layers
+        self.tokeys = nn.Linear(embedding_size, embedding_size, bias=False)
+        self.toqueries = nn.Linear(latent_size, latent_size, bias=False)
+        self.tovalues = nn.Linear(embedding_size, embedding_size, bias=False)
+
+    def forward(self, batch, latent):
+        """
+        Applying layers on an input batch & latent, and computing the attention matrix:
+            - Queries (latent)
+            - Keys (batch)
+            - Values (batch)
+        Parameter: batch of dimension (batch_size, nr pixels, embedding size),
+        latent of dimension (batch size, nr latents, latent size)
+        Returns: result of cross attention (same dimensionality as latent)
+        """
+
+        # Input Dimensions
+        a, b, c = batch.size()
+        x, y, z = latent.size()
+
+        # Applying queries-keys-values layers
+        keys = self.tokeys(batch)
+        queries = self.toqueries(latent)
+        values = self.tovalues(batch)
+
+        # Self-Attention Operations
+        weights = torch.bmm(queries, keys.transpose(1,2))
+        weights = weights / math.sqrt(c)
+        weights = F.softmax(weights, dim=2)
+        attention = torch.bmm(weights, values)
+        return attention
 
 # Self Attention Module
 class SelfAttention(nn.Module):
@@ -219,10 +149,10 @@ class SelfAttention(nn.Module):
 
 # Transformer Block
 class TransformerBlock(nn.Module):
-    def __init__(self, heads: int, embedding_size: int, ff: int, dropout: float) -> None:
+    def __init__(self, heads: int, embedding_size: int, ff: int) -> None:
         """
         Initializing Transformer Block object.
-        Parameters: number of heads, embedding size, feedforward constant, dropout
+        Parameters: number of heads, embedding size, feedforward constant
         """
 
         # Initialization
@@ -237,7 +167,6 @@ class TransformerBlock(nn.Module):
             nn.GELU(),
             nn.Linear(ff * embedding_size, embedding_size)
         )
-        self.dropout = nn.Dropout(dropout)
 
     def forward(self, batch):
         """
@@ -246,48 +175,127 @@ class TransformerBlock(nn.Module):
             - 2 Layers of normalization
             - Feed-Forward block:
                 - Linear Layer
-                - ReLU activation
+                - GELU activation
                 - Linear Layer
             - Dropout
-        Parameter: batch of dimension (nr_sequences, nr_tokens, embedding_size)
+        Parameter: batch of dimension (nr_sequences, nr_batches, embedding_size)
         Returns: result of transformer block (same dimensionality)
         """
+        batch = batch + self.attention(self.norm1(batch))
+        batch = batch + self.feedforward(self.norm2(batch))
+        return batch
 
-        # Applying layers
-        attended = self.attention(batch)
-        batch = self.norm1(attended + batch)
-        batch = self.dropout(batch)
-        feedforward = self.feedforward(batch)
-        batch = self.norm2(feedforward + batch)
+# Perceiver Block (1 cross attention & 1 self attention)
+class PerceiverBlock(nn.Module):
+    def __init__(self, heads: int, embedding_size: int, latent_size: int, ff: int) -> None:
+        """
+        Initializing Transformer Block object.
+        Parameters: number of heads, embedding size, feedforward constant
+        """
 
-        # Final output
-        final = self.dropout(batch)
-        return final
+        # Initialization
+        super().__init__()
 
-# Transformer Neural Network
-class Transformer(nn.Module):
+        # Layers
+        self.cross = CrossAttention(embedding_size, latent_size)
+        self.norm1 = nn.LayerNorm(embedding_size)
+        self.linear1 = nn.Linear(latent_size, latent_size)
+        self.self = SelfAttention(heads, latent_size)
+        self.norm2 = nn.LayerNorm(latent_size)
+        self.norm3 = nn.LayerNorm(latent_size)
+        self.linear2 = nn.Linear(latent_size, latent_size)
+        self.feedforward = nn.Sequential(
+            nn.Linear(embedding_size, embedding_size),
+            nn.GELU(),
+            nn.Linear(embedding_size, embedding_size)
+        )
+
+    def forward(self, batch, latent):
+        """
+        Applying transformer block layers on an input batch:
+            - Multi-headed Self Attention
+            - 2 Layers of normalization
+            - Feed-Forward block:
+                - Linear Layer
+                - GELU activation
+                - Linear Layer
+            - Dropout
+        Parameter: batch of dimension (nr_sequences, nr_batches, embedding_size)
+        Returns: result of transformer block (same dimensionality)
+        """
+        batch = batch + self.cross(self.norm1(batch), latent)
+        batch = self.linear1(batch)
+        batch = batch + self.self(self.norm2(batch))
+        batch = self.linear2(batch)
+        batch = batch + self.feedforward(self.norm3(batch))
+        return batch
+
+
+# 3) Neural Network Objects
+
+# Perceiver Neural Network
+class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
-        patch_size: int, embedding_size: int, nr_patches: int, 
-        attention_heads: int, ff: int, dropout: int, depth: int, 
+        embedding_size: int, latent_size: int, attention_heads: int, depth: int, 
         nr_classes: int) -> None:
+
+        # Initialization
+        super().__init__()
+
+        # Parameters
+        self.device = device
+        self.channels = channels
+
+        # Layers
+        self.convolution = nn.Conv1d(channels, embedding_size, 1)
+        self.pos_emb = nn.Parameter(torch.randn(batch_size, image_size ** 2, embedding_size))
+        self.latents = nn.Parameter(torch.randn(batch_size, 2 * embedding_size, latent_size))
+        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, embedding_size, latent_size) for block in range(depth)])
+        self.classes = nn.Linear(latent_size, nr_classes)
+
+
+    def forward(self, batch: list) -> list:
+        """
+        Forward call of the Transformer class.
+        Parameter: batch of images (batch of images (sequences of patches in 3 channels))
+        Operations:
+        - Split images from the batch in flattened patches
+        - Apply layers defined in init
+        - Apply a global average operation before applying the last layer
+        Returns: output of transformer network
+        """
+        a, b, c, d = batch.size()
+        batch = batch.to(torch.float).view(a, b, c * d)
+        batch = self.convolution(batch)
+        a, b, c = batch.size()
+        batch = batch.view(a, c, b)
+        batch = torch.cat((batch, self.pos_emb), dim=2)
+        batch = self.perceiver_blocks(batch, self.latents)
+        batch = torch.mean(batch, dim=1)
+        batch = self.classes(batch)
+        return batch
+
+# VisionTransformer Neural Network
+class VisionTransformer(nn.Module):
+    def __init__(self, device, channels: int, image_size: int, batch_size: int,
+        patch_size: int, embedding_size: int, attention_heads: int, ff: int,
+        depth: int, nr_classes: int) -> None:
         """
         Function that initializes the Transformer class.
         Parameters: 
+        - device (gpu or cuda)
         - image channels (should be 3 for RGB)
-        - image size (for CIFAKE dataset this will be 32 i think)
+        - image size (should be 32)
         - batch size
-        - patch size for splitting input images
+        - patch size 
         - embedding size for representing patches
-        - total number of distinct patches
         - number of attention heads
         - constant to use in feedforward network in transformer block
-        - dropout
         - number of transformer blocks
         - number of classes (should be 2 for real and fake)
         Layers:
-        - Embedding layer for mapping each distinct patch to a linear embedding
-        - Embedding layer for mapping positions of patches within each image
-        - Linear layer for unifying the two embeddings
+        - Standard learnable position embeddings as nn.Parameter
+        - Linear layer for unifying the patched input and position embeddings
         - Sequence of transformer blocks
         - Linear layer for assigning class values
         """
@@ -304,10 +312,9 @@ class Transformer(nn.Module):
 
         # Layers
         nr_patches = (image_size // patch_size) ** 2
-        self.position_embeddings = nn.Embedding(num_embeddings=nr_patches, embedding_dim=embedding_size)
+        self.position_embeddings = nn.Parameter(torch.randn(batch_size, nr_patches, embedding_size))
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
-        self.dropout = nn.Dropout(dropout)
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff, dropout) for block in range(depth)])
+        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
         self.classes = nn.Linear(embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
@@ -322,65 +329,8 @@ class Transformer(nn.Module):
         """
         patch_emb = images_to_patches(batch, self.patch_size, self.image_size, self.channels, self.embedding_size, self.device)
         x, y, z = patch_emb.size()
-        positions = torch.arange(y, device=self.device)
-        position_emb = self.position_embeddings(positions)[None, :, :].expand(x, y, z)
-        batch = self.unify_embeddings(torch.cat((patch_emb, position_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
-        batch = self.dropout(batch)
+        batch = self.unify_embeddings(torch.cat((patch_emb, self.position_embeddings), dim=2).view(-1, 2 * z)).view(x, y, z)
         batch = self.transformer_blocks(batch)
         batch = torch.mean(batch, dim=1)
         batch = self.classes(batch)
         return batch
-
-# Training Data
-xtrain, ytrain = access_data("train", DATA_PATH, DEVICE)
-xtrain, ytrain = shuffle_dataset(xtrain, ytrain)
-train_dataloader = batch_data(xtrain, ytrain, TRAIN_BATCH_SIZE, DEVICE)
-
-# Training Function
-def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
-    """
-    Function that trains a chosen Neural Network.
-    Parameters: Neural Network object, name for save file, training dataset,
-    number of epochs, loss function, learning rate, device
-    Prints: Cross Entropy loss at the end of each epoch
-    """
-
-    optimizer = Adam(lr=lr, params=net.parameters())
-    nr_train_batches = len(dataloader)
-    print("Start training.")
-    
-    for epoch in range(nr_epochs):
-        running_loss: float = 0.0
-        for i, data in enumerate(dataloader, 0):
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            inputs = inputs.type(torch.LongTensor).to(device)
-            labels = labels.type(torch.LongTensor).to(device)
-
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = net(inputs)
-            outputs = outputs.type(torch.FloatTensor).to(device)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            # print statistics
-            running_loss += loss.item()
-            if i % 50 == 49:
-                print(f'Epoch {epoch + 1} loss: {running_loss / 50:.3f}')
-                running_loss = 0.0
-
-    print('Finished Training')
-    PATH: str = f'./eaticx-{name}.pth'
-    torch.save(net.state_dict(), PATH)
-
-# Training Loop
-desired_net = Transformer(DEVICE, CHANNELS, IMG_SIZE, TRAIN_BATCH_SIZE, \
-    PATCH_SIZE, EMBEDDING_SIZE, TRAIN_TOTAL_PATCHES, ATTENTION_HEADS, FF, DROPOUT, \
-    DEPTH, NR_CLASSES).to(DEVICE)
-desired_net_name: str = "transformer"
-train(desired_net, desired_net_name, train_dataloader, NUM_EPOCHS, CRITERION, \
-    LEARNING_RATE, DEVICE)
