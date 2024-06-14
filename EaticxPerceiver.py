@@ -8,9 +8,9 @@ import torch.nn.functional as F
 import math
 
 
-# Self Attention Module
+# Cross Attention Module
 class CrossAttention(nn.Module):
-    def __init__(self, heads: int, embedding_size: int) -> None:
+    def __init__(self, embedding_size: int, latent_size: int) -> None:
         """
         Initializing (multi-headed) Self Attention object.
         Parameters: number of heads, embedding size
@@ -18,51 +18,36 @@ class CrossAttention(nn.Module):
         # Initialization
         super().__init__()
 
-        # Parameters
-        self.heads: int = heads
-        self.head_size: int = embedding_size * heads
-
         # Layers
-        self.tokeys = nn.Linear(embedding_size, self.head_size, bias=False)
-        self.toqueries = nn.Linear(embedding_size, self.head_size, bias=False)
-        self.tovalues = nn.Linear(embedding_size, self.head_size, bias=False)
-        self.unify_heads = nn.Linear(self.head_size, embedding_size)
+        self.tokeys = nn.Linear(embedding_size, embedding_size, bias=False)
+        self.toqueries = nn.Linear(latent_size, latent_size, bias=False)
+        self.tovalues = nn.Linear(embedding_size, embedding_size, bias=False)
 
     def forward(self, batch, latent):
         """
-        Applying layers on an input batch & computing the attention matrix:
-            - Queries
-            - Keys
-            - Values
-            - Layer to unify attention heads
-        Parameter: batch of dimension (nr_sequences, nr_tokens, embedding_size)
-        Returns: result of multi headed self attention (same dimensionality)
+        Applying layers on an input batch & latent, and computing the attention matrix:
+            - Queries (latent)
+            - Keys (batch)
+            - Values (batch)
+        Parameter: batch of dimension (batch_size, nr pixels, embedding size),
+        latent of dimension (batch size, nr latents, latent size)
+        Returns: result of cross attention (same dimensionality as latent)
         """
 
         # Input Dimensions
         a, b, c = batch.size()
         x, y, z = latent.size()
-
         # Applying queries-keys-values layers
-        keys = self.tokeys(batch).view(a, b, self.heads, c)
-        queries = self.toqueries(latent).view(x, y, self.heads, z)
-        values = self.tovalues(batch).view(a, b, self.heads, c)
-
-        # Old Self attention is back
-        keys = keys.transpose(1, 2).contiguous().view(a * self.heads, b, c)
-        queries = queries.transpose(1, 2).contiguous().view(x * self.heads, y, z)
-        values = values.transpose(1, 2).contiguous().view(a * self.heads, b, c)
+        keys = self.tokeys(batch)
+        queries = self.toqueries(latent)
+        values = self.tovalues(batch)
 
         # Self-Attention Operations
-        weights = torch.bmm(queries, keys.transpose(1, 2))
-        weights = weights / math.sqrt(c // self.heads)
+        weights = torch.bmm(queries, keys.transpose(1,2))
+        weights = weights / math.sqrt(c)
         weights = F.softmax(weights, dim=2)
-        attention = torch.bmm(weights, values).view(a, self.heads, b, c)
-        attention = attention.transpose(1,2).contiguous().view(a, b, self.head_size)
-
-        # Final output
-        final = self.unify_heads(attention)
-        return final
+        attention = torch.bmm(weights, values)
+        return attention
 
 # Self Attention Module
 class SelfAttention(nn.Module):
@@ -171,7 +156,7 @@ class TransformerBlock(nn.Module):
 # Perceiver Neural Network
 class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
-        embedding_size: int, attention_heads: int, ff: int, dropout: int, 
+        embedding_size: int, latent_size: int, attention_heads: int, ff: int, dropout: int, 
         depth: int, nr_classes: int) -> None:
 
         # Initialization
@@ -182,14 +167,14 @@ class Perceiver(nn.Module):
         self.channels = channels
 
         # Layers
-        self.convolution = nn.Conv1d(channels, 256, 1)
-        self.pos_emb1 = nn.Parameter(nn.Embedding(image_size ** 2, 256))
-        self.latents = nn.Parameter(torch.randn(512, 1024))
-        self.cross_attention = CrossAttention(attention_heads, embedding_size)
-        self.norm1 = nn.LayerNorm(1024)
+        self.convolution = nn.Conv1d(channels, embedding_size, 1)
+        self.pos_emb = nn.Parameter(torch.randn(batch_size, image_size ** 2, embedding_size))
+        self.latents = nn.Parameter(torch.randn(batch_size, 2 * embedding_size, latent_size))
+        self.cross_attention = CrossAttention(2 * embedding_size, latent_size)
+        self.norm1 = nn.LayerNorm(latent_size)
         self.dropout = nn.Dropout(dropout)
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff, dropout) for block in range(depth)])
-        self.pos_emb2 = nn.Parameter(nn.Embedding(1, 2))
+        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, latent_size, ff, dropout) for block in range(8)])
+        self.classes = nn.Linear(latent_size, nr_classes)
 
 
     def forward(self, batch: list) -> list:
@@ -202,16 +187,14 @@ class Perceiver(nn.Module):
         - Apply a global average operation before applying the last layer
         Returns: output of transformer network
         """
-
-        batch = self.convolution(batch)
         a, b, c, d = batch.size()
-        batch = batch.view(a, c, d, b).view(a, c*d, b)
-        positions1 = self.pos_emb1(torch.arange(256, device=self.device))
-        batch = torch.cat((batch, positions1), dim=1)
-        attention1 = self.cross_attention(batch, self.latents)
-        batch = self.dropout(self.norm1(attention1 + batch))
-        batch = self.transformer_blocks(batch)
-        positions2 = self.pos_emb2(torch.arange(256, device=self.device))
-        attention2 = self.cross_attention(batch, positions2)
-        batch = self.dropout(self.norm2(attention2 + batch))[:, None, :]
+        batch = batch.to(torch.float).view(a, b, c * d)
+        batch = self.convolution(batch)
+        a, b, c = batch.size()
+        batch = batch.view(a, c, b)
+        batch = torch.cat((batch, self.pos_emb), dim=2)
+        attention = self.cross_attention(batch, self.latents)
+        batch = self.transformer_blocks(attention)
+        batch = torch.mean(batch, dim=1)
+        batch = self.classes(batch)
         return batch

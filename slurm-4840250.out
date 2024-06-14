@@ -1,0 +1,44 @@
+Start loading training images for the Perceiver model
+
+- 10000 FAKE images accessed.
+- 20000 FAKE images accessed.
+- 30000 FAKE images accessed.
+- 40000 FAKE images accessed.
+- 50000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+- 20000 REAL images accessed.
+- 30000 REAL images accessed.
+- 40000 REAL images accessed.
+- 50000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+
+
+Start training the Perceiver.
+Epoch 1 loss: 0.558
+Epoch 2 loss: 0.501
+Epoch 3 loss: 0.472
+Finished Training
+- 10000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Traceback (most recent call last):
+  File "<stdin>", line 138, in <module>
+  File "<stdin>", line 114, in accuracy_test
+  File "/var/scratch/mdr317/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/scratch/mdr317/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/scratch/mdr317/thesis/EaticxPerceiver.py", line 195, in forward
+    batch = torch.cat((batch, self.pos_emb), dim=2)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Sizes of tensors must match except in dimension 2. Expected size 1000 but got size 100 for tensor number 1 in the list.

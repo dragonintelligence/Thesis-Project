@@ -103,7 +103,7 @@ class SelfAttention(nn.Module):
 
 # Transformer Block
 class TransformerBlock(nn.Module):
-    def __init__(self, heads: int, embedding_size: int, ff: int, dropout: float) -> None:
+    def __init__(self, heads: int, embedding_size: int, ff: int) -> None:
         """
         Initializing Transformer Block object.
         Parameters: number of heads, embedding size, feedforward constant, dropout
@@ -121,7 +121,6 @@ class TransformerBlock(nn.Module):
             nn.GELU(),
             nn.Linear(ff * embedding_size, embedding_size)
         )
-        self.dropout = nn.Dropout(dropout)
 
     def forward(self, batch):
         """
@@ -140,20 +139,15 @@ class TransformerBlock(nn.Module):
         # Applying layers
         attended = self.attention(batch)
         batch = self.norm1(attended + batch)
-        batch = self.dropout(batch)
         feedforward = self.feedforward(batch)
         batch = self.norm2(feedforward + batch)
-
-        # Final output
-        final = self.dropout(batch)
-        return final
+        return batch
 
 # Transformer Neural Network
 class Transformer(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
-        patch_size: int, embedding_size: int, nr_patches: int, 
-        attention_heads: int, ff: int, dropout: int, depth: int, 
-        nr_classes: int) -> None:
+        patch_size: int, embedding_size: int, attention_heads: int, ff: int,
+        depth: int, nr_classes: int) -> None:
         """
         Function that initializes the Transformer class.
         Parameters: 
@@ -188,10 +182,9 @@ class Transformer(nn.Module):
 
         # Layers
         nr_patches = (image_size // patch_size) ** 2
-        self.position_embeddings = nn.Embedding(num_embeddings=nr_patches, embedding_dim=embedding_size)
+        self.position_embeddings = nn.Parameter(torch.randn(batch_size, nr_patches, embedding_size))
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
-        self.dropout = nn.Dropout(dropout)
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff, dropout) for block in range(depth)])
+        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
         self.classes = nn.Linear(embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
@@ -206,10 +199,7 @@ class Transformer(nn.Module):
         """
         patch_emb = images_to_patches(batch, self.patch_size, self.image_size, self.channels, self.embedding_size, self.device)
         x, y, z = patch_emb.size()
-        positions = torch.arange(y, device=self.device)
-        position_emb = self.position_embeddings(positions)[None, :, :].expand(x, y, z)
-        batch = self.unify_embeddings(torch.cat((patch_emb, position_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
-        batch = self.dropout(batch)
+        batch = self.unify_embeddings(torch.cat((patch_emb, self.position_embeddings), dim=2).view(-1, 2 * z)).view(x, y, z)
         batch = self.transformer_blocks(batch)
         batch = torch.mean(batch, dim=1)
         batch = self.classes(batch)

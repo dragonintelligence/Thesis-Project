@@ -1,3 +1,5 @@
+Start loading training images for the VisionTransformer model
+
 - 10000 FAKE images accessed.
 - 20000 FAKE images accessed.
 - 30000 FAKE images accessed.
@@ -13,12 +15,18 @@ All FAKE images are accessed.
 All REAL images are accessed.
 
 All images are accessed.
-Start training.
-Epoch 1 loss: 0.939
-Epoch 2 loss: 0.732
-Epoch 3 loss: 1.861
-Epoch 4 loss: 0.701
-Epoch 5 loss: 0.712
-Epoch 6 loss: 0.709
-Epoch 7 loss: 1.261
+
+
+Start training the VisionTransformer.
+Epoch 1 loss: 0.703
+Epoch 2 loss: 0.699
+Epoch 3 loss: 0.698
 Finished Training
+- 10000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Accuracy of the VisionTransformer on the 20000 test images: 50 %
