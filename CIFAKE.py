@@ -27,7 +27,9 @@ def access_data(data_type: str, source: str, device: str) -> tuple:
         index: int = 0
         for file in os.listdir(path):
             labels.append(0 if folder == "REAL" else 1)
-            instances.append(torchvision.io.read_image(os.path.join(path, file)).to(device))
+            image = torchvision.io.read_image(os.path.join(path, file)).to(device)
+            image = F.normalize(image.to(torch.float), dim=2)
+            instances.append(image)
             index += 1
             if index % 10000 == 0:
                 print(f"- {index} {folder} images accessed.")

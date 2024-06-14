@@ -35,15 +35,15 @@ VIT_EMB: int = 200
 VIT_HEADS: int = 12 # from paper ViT-Base
 FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-VIT_EMB: int = 100
-VIT_LAT: int = 200
+PER_EMB: int = 100
+PER_LAT: int = 200
 PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 100
+NUM_EPOCHS: int = 2
 LEARNING_RATE: float = 0.00001
 CRITERION = nn.CrossEntropyLoss()
-MODEL: int = "ViT"
+MODEL: int = "Perceiver"
 
 # Training Function
 def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
