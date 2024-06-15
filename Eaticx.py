@@ -223,7 +223,7 @@ class PerceiverBlock(nn.Module):
         Parameter: batch of dimension (nr_sequences, nr_batches, embedding_size)
         Returns: result of transformer block (same dimensionality)
         """
-	batch, latent = inputs
+        batch, latent = inputs
         output = batch + self.cross(self.norm1(batch), latent)
         output = self.linear1(output)
         output = output + self.self(self.norm2(output))
@@ -273,9 +273,9 @@ class Perceiver(nn.Module):
         a, b, c = batch.size()
         batch = batch.view(a, c, b)
         batch = torch.cat((batch, self.pos_emb), dim=2)
-        output = self.perceiver_block1((batch, self.latent)s)
-        for batch in range(self.depth-1):
-            batch = self.perceiver_block2((batch, output))
+        output = self.perceiver_block1((batch, self.latents))
+        for batch in range(self.depth - 1):
+            output = self.perceiver_block2((batch, output))
         output = torch.mean(output, dim=1)
         output = self.classes(output)
         return output
