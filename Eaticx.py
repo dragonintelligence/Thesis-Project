@@ -187,7 +187,7 @@ class TransformerBlock(nn.Module):
 
 # Perceiver Block (1 cross attention & 1 self attention)
 class PerceiverBlock(nn.Module):
-    def __init__(self, heads: int, embedding_size: int, latent_size: int, ff: int) -> None:
+    def __init__(self, heads: int, embedding_size: int, latent_size: int) -> None:
         """
         Initializing Transformer Block object.
         Parameters: number of heads, embedding size, feedforward constant
@@ -210,7 +210,7 @@ class PerceiverBlock(nn.Module):
             nn.Linear(embedding_size, embedding_size)
         )
 
-    def forward(self, batch, latent):
+    def forward(self, inputs: tuple):
         """
         Applying transformer block layers on an input batch:
             - Multi-headed Self Attention
@@ -223,12 +223,13 @@ class PerceiverBlock(nn.Module):
         Parameter: batch of dimension (nr_sequences, nr_batches, embedding_size)
         Returns: result of transformer block (same dimensionality)
         """
-        batch = batch + self.cross(self.norm1(batch), latent)
-        batch = self.linear1(batch)
-        batch = batch + self.self(self.norm2(batch))
-        batch = self.linear2(batch)
-        batch = batch + self.feedforward(self.norm3(batch))
-        return batch
+	batch, latent = inputs
+        output = batch + self.cross(self.norm1(batch), latent)
+        output = self.linear1(output)
+        output = output + self.self(self.norm2(output))
+        output = self.linear2(output)
+        output = output + self.feedforward(self.norm3(output))
+        return output
 
 
 # 3) Neural Network Objects
@@ -245,12 +246,14 @@ class Perceiver(nn.Module):
         # Parameters
         self.device = device
         self.channels = channels
+        self.depth = depth
 
         # Layers
         self.convolution = nn.Conv1d(channels, embedding_size, 1)
         self.pos_emb = nn.Parameter(torch.randn(batch_size, image_size ** 2, embedding_size))
         self.latents = nn.Parameter(torch.randn(batch_size, 2 * embedding_size, latent_size))
-        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, embedding_size, latent_size) for block in range(depth)])
+        self.perceiver_block1 = PerceiverBlock(attention_heads, embedding_size, latent_size)
+        self.perceiver_block2 = PerceiverBlock(attention_heads, embedding_size, latent_size)
         self.classes = nn.Linear(latent_size, nr_classes)
 
 
@@ -270,10 +273,12 @@ class Perceiver(nn.Module):
         a, b, c = batch.size()
         batch = batch.view(a, c, b)
         batch = torch.cat((batch, self.pos_emb), dim=2)
-        batch = self.perceiver_blocks(batch, self.latents)
-        batch = torch.mean(batch, dim=1)
-        batch = self.classes(batch)
-        return batch
+        output = self.perceiver_block1((batch, self.latent)s)
+        for batch in range(self.depth-1):
+            batch = self.perceiver_block2((batch, output))
+        output = torch.mean(output, dim=1)
+        output = self.classes(output)
+        return output
 
 # VisionTransformer Neural Network
 class VisionTransformer(nn.Module):

@@ -40,10 +40,11 @@ PER_LAT: int = 128 # 2 x PER_EMB
 PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 100
-LEARNING_RATE: float = 0.00001
+NUM_EPOCHS: int = 2
+VIT_LR: float = 0.0008
+PER_LR: float = 0.004
 CRITERION = nn.CrossEntropyLoss()
-MODEL: int = "ViT"
+MODEL: int = "Perceiver"
 
 # Training Function
 def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
@@ -90,13 +91,13 @@ print()
 
 # Test Accuracy Function
 
-def accuracy_test(net, name) -> None:
+def accuracy_test(data, net, name) -> None:
     correct: int = 0
     total: int = 0
 
     # since we're not training, we don't need to calculate the gradients for our outputs
     with torch.no_grad():
-        for data in test_dataloader:
+        for data in dataloader:
             sentences, labels = data
             # calculate outputs by running images through the network
             outputs = net(sentences)
@@ -122,11 +123,13 @@ def experiment(model: str) -> None:
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PATCH_SIZE, VIT_EMB, VIT_HEADS, FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+        train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
+            VIT_LR, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-    PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
-    train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
-        LEARNING_RATE, DEVICE)
+            PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
+        train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
+            PER_LR, DEVICE)
 
     # Test Accuracy 
     xtest, ytest = CIFAKE.access_data("test", DATA_PATH, DEVICE)
@@ -134,6 +137,6 @@ def experiment(model: str) -> None:
     test_dataloader = CIFAKE.batch_data(xtest, ytest, BATCH_SIZE, DEVICE)
     PATH: str = f'./eaticx-{model}.pth'
     desired_net.load_state_dict(torch.load(PATH))
-    accuracy_test(desired_net, model)
+    accuracy_test(data, desired_net, model)
 
 experiment(MODEL)
