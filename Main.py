@@ -56,7 +56,7 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
 
     optimizer = Adam(lr=lr, params=net.parameters())
     nr_train_batches = len(dataloader)
-    print("Start training the VisionTransformer.")
+    print("Start training the Perceiver.")
     
     for epoch in range(nr_epochs):
         running_loss: float = 0.0
@@ -136,6 +136,6 @@ def experiment(model: str) -> None:
     test_dataloader = CIFAKE.batch_data(xtest, ytest, BATCH_SIZE, DEVICE)
     PATH: str = f'./eaticx-{model}.pth'
     desired_net.load_state_dict(torch.load(PATH))
-    accuracy_test(data, desired_net, model)
+    accuracy_test(test_dataloader, desired_net, model)
 
 experiment(MODEL)

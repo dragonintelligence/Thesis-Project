@@ -252,7 +252,7 @@ class Perceiver(nn.Module):
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, 2 * channels))
         self.perceiver_block1 = PerceiverBlock(attention_heads, 2 *  channels)
         self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
-        self.classes = nn.Linear(latent_size, nr_classes)
+        self.classes = nn.Linear(2 * channels, nr_classes)
 
 
     def forward(self, batch: list) -> list:
@@ -316,7 +316,7 @@ class VisionTransformer(nn.Module):
         self.position_embeddings = nn.Parameter(torch.randn(batch_size, nr_patches, embedding_size))
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
-        self.classes = nn.Linear(2 * channels, nr_classes)
+        self.classes = nn.Linear(embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
         """
