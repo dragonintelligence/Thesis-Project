@@ -51,18 +51,18 @@ def images_to_patches(images, patch_size, image_size, channels, embedding_size, 
 
 # Cross Attention Module
 class CrossAttention(nn.Module):
-    def __init__(self, embedding_size: int, latent_size: int) -> None:
+    def __init__(self, embedding: int) -> None:
         """
         Initializing (multi-headed) Self Attention object.
-        Parameters: embedding size (from real input), latent size
+        Parameters: embedding (= 2 * input channels)
         """
         # Initialization
         super().__init__()
 
         # Layers
-        self.tokeys = nn.Linear(embedding_size, embedding_size, bias=False)
-        self.toqueries = nn.Linear(latent_size, latent_size, bias=False)
-        self.tovalues = nn.Linear(embedding_size, embedding_size, bias=False)
+        self.tokeys = nn.Linear(embedding, embedding, bias=False)
+        self.toqueries = nn.Linear(embedding, embedding, bias=False)
+        self.tovalues = nn.Linear(embedding, embedding, bias=False)
 
     def forward(self, batch, latent):
         """
@@ -85,7 +85,7 @@ class CrossAttention(nn.Module):
         values = self.tovalues(batch)
 
         # Self-Attention Operations
-        weights = torch.bmm(queries, keys.transpose(1,2))
+        weights = torch.bmm(queries, keys.transpose(1, 2))
         weights = weights / math.sqrt(c)
         weights = F.softmax(weights, dim=2)
         attention = torch.bmm(weights, values)
@@ -187,27 +187,27 @@ class TransformerBlock(nn.Module):
 
 # Perceiver Block (1 cross attention & 1 self attention)
 class PerceiverBlock(nn.Module):
-    def __init__(self, heads: int, embedding_size: int, latent_size: int) -> None:
+    def __init__(self, heads: int, embedding: int) -> None:
         """
         Initializing Transformer Block object.
-        Parameters: number of heads, embedding size, feedforward constant
+        Parameters: number of heads, embedding size (= 2 * input channels)
         """
 
         # Initialization
         super().__init__()
 
         # Layers
-        self.cross = CrossAttention(embedding_size, latent_size)
-        self.norm1 = nn.LayerNorm(embedding_size)
-        self.linear1 = nn.Linear(latent_size, latent_size)
-        self.self = SelfAttention(heads, latent_size)
-        self.norm2 = nn.LayerNorm(latent_size)
-        self.norm3 = nn.LayerNorm(latent_size)
-        self.linear2 = nn.Linear(latent_size, latent_size)
+        self.cross = CrossAttention(embedding)
+        self.norm1 = nn.LayerNorm(embedding)
+        self.linear1 = nn.Linear(embedding, embedding)
+        self.self = SelfAttention(heads, embedding)
+        self.norm2 = nn.LayerNorm(embedding)
+        self.norm3 = nn.LayerNorm(embedding)
+        self.linear2 = nn.Linear(embedding, embedding)
         self.feedforward = nn.Sequential(
-            nn.Linear(embedding_size, embedding_size),
+            nn.Linear(embedding, embedding),
             nn.GELU(),
-            nn.Linear(embedding_size, embedding_size)
+            nn.Linear(embedding, embedding)
         )
 
     def forward(self, inputs: tuple):
@@ -224,7 +224,7 @@ class PerceiverBlock(nn.Module):
         Returns: result of transformer block (same dimensionality)
         """
         batch, latent = inputs
-        output = batch + self.cross(self.norm1(batch), latent)
+        output =  self.cross(self.norm1(batch), latent)
         output = self.linear1(output)
         output = output + self.self(self.norm2(output))
         output = self.linear2(output)
@@ -237,7 +237,7 @@ class PerceiverBlock(nn.Module):
 # Perceiver Neural Network
 class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
-        embedding_size: int, latent_size: int, attention_heads: int, depth: int, 
+        latent_size: int, attention_heads: int, depth: int, 
         nr_classes: int) -> None:
 
         # Initialization
@@ -245,15 +245,13 @@ class Perceiver(nn.Module):
 
         # Parameters
         self.device = device
-        self.channels = channels
         self.depth = depth
 
         # Layers
-        self.convolution = nn.Conv1d(channels, embedding_size, 1)
-        self.pos_emb = nn.Parameter(torch.randn(batch_size, image_size ** 2, embedding_size))
-        self.latents = nn.Parameter(torch.randn(batch_size, 2 * embedding_size, latent_size))
-        self.perceiver_block1 = PerceiverBlock(attention_heads, embedding_size, latent_size)
-        self.perceiver_block2 = PerceiverBlock(attention_heads, embedding_size, latent_size)
+        self.pos_emb = nn.Parameter(torch.randn(batch_size, image_size ** 2, channels))
+        self.latents = nn.Parameter(torch.randn(batch_size, latent_size, 2 * channels))
+        self.perceiver_block1 = PerceiverBlock(attention_heads, 2 *  channels)
+        self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
         self.classes = nn.Linear(latent_size, nr_classes)
 
 
@@ -269,12 +267,10 @@ class Perceiver(nn.Module):
         """
         a, b, c, d = batch.size()
         batch = batch.to(torch.float).view(a, b, c * d)
-        batch = self.convolution(batch)
-        a, b, c = batch.size()
-        batch = batch.view(a, c, b)
-        batch = torch.cat((batch, self.pos_emb), dim=2)
+        batch = batch.view(a, c * d, b)
+        batch = torch.cat((batch, self.pos_emb), dim=2).to(self.device)
         output = self.perceiver_block1((batch, self.latents))
-        for batch in range(self.depth - 1):
+        for block in range(self.depth - 1):
             output = self.perceiver_block2((batch, output))
         output = torch.mean(output, dim=1)
         output = self.classes(output)
@@ -320,7 +316,7 @@ class VisionTransformer(nn.Module):
         self.position_embeddings = nn.Parameter(torch.randn(batch_size, nr_patches, embedding_size))
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
-        self.classes = nn.Linear(embedding_size, nr_classes)
+        self.classes = nn.Linear(2 * channels, nr_classes)
 
     def forward(self, batch: list) -> list:
         """

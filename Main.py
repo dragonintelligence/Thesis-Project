@@ -35,8 +35,7 @@ VIT_EMB: int = 48 # PATCH_SIZE ** 2 x 3 (same formula as ViT-Base)
 VIT_HEADS: int = 12 # from paper ViT-Base
 FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-PER_EMB: int = 64 # arbitrary, same as VIT_EMB)
-PER_LAT: int = 128 # 2 x PER_EMB
+PER_LAT: int = 64 # arbitrary as fuck
 PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
@@ -127,7 +126,7 @@ def experiment(model: str) -> None:
             VIT_LR, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
+            PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
         train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
             PER_LR, DEVICE)
 
