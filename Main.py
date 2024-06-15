@@ -23,7 +23,8 @@ import Eaticx # the neural network objects
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim import Adam
+import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
 
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,11 +40,11 @@ PER_LAT: int = 64 # arbitrary as fuck
 PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 2
+NUM_EPOCHS: int = 120
 VIT_LR: float = 0.0008
 PER_LR: float = 0.004
 CRITERION = nn.CrossEntropyLoss()
-MODEL: int = "Perceiver"
+MODEL: int = "ViT"
 
 # Training Function
 def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
@@ -54,13 +55,15 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
     Prints: Cross Entropy loss at the end of each epoch
     """
 
-    optimizer = Adam(lr=lr, params=net.parameters())
+    optimizer = optim.Adam(lr=lr, params=net.parameters())
+    if name == "ViT":
+        scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.5, total_iters=10000)
     nr_train_batches = len(dataloader)
-    print("Start training the Perceiver.")
+    print(f"Start training the {name}.")
     
     for epoch in range(nr_epochs):
         running_loss: float = 0.0
-        for i, data in enumerate(dataloader, 0):
+        for i, data in enumerate(dataloader, 0): 
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             inputs = inputs.type(torch.LongTensor).to(device)
@@ -81,7 +84,12 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
             if i == nr_train_batches - 1:
                 print(f'Epoch {epoch + 1} loss: {running_loss / (i+1):.3f}')
                 running_loss = 0.0
-
+        if name == "ViT":
+            scheduler.step()
+        elif name == "Perceiver":
+            if epoch in [84, 102, 114]:
+               for g in optimizer.param_groups:
+                   g['lr'] /= 10  
     print('Finished Training')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
@@ -90,7 +98,7 @@ print()
 
 # Test Accuracy Function
 
-def accuracy_test(data, net, name) -> None:
+def accuracy_test(dataloader, net, name) -> None:
     correct: int = 0
     total: int = 0
 
