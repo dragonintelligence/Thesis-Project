@@ -41,8 +41,8 @@ PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
 NUM_EPOCHS: int = 120
-VIT_LR: float = 0.0008
-PER_LR: float = 0.004
+VIT_LR: float = 0.00001
+PER_LR: float = 0.00001
 CRITERION = nn.CrossEntropyLoss()
 MODEL: int = "ViT"
 
@@ -56,8 +56,8 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
     """
 
     optimizer = optim.Adam(lr=lr, params=net.parameters())
-    if name == "ViT":
-        scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.5, total_iters=10000)
+    # if name == "ViT":
+    #     scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.5, total_iters=10000)
     nr_train_batches = len(dataloader)
     print(f"Start training the {name}.")
     
@@ -84,17 +84,15 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
             if i == nr_train_batches - 1:
                 print(f'Epoch {epoch + 1} loss: {running_loss / (i+1):.3f}')
                 running_loss = 0.0
-        if name == "ViT":
-            scheduler.step()
-        elif name == "Perceiver":
-            if epoch in [84, 102, 114]:
-               for g in optimizer.param_groups:
-                   g['lr'] /= 10  
+        # if name == "ViT":
+        #     scheduler.step()
+        # elif name == "Perceiver":
+        #     if epoch in [84, 102, 114]:
+        #         for g in optimizer.param_groups:
+        #             g['lr'] /= 10  
     print('Finished Training')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
-
-print()
 
 # Test Accuracy Function
 
@@ -138,6 +136,8 @@ def experiment(model: str) -> None:
         train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
             PER_LR, DEVICE)
 
+    print()
+    
     # Test Accuracy 
     xtest, ytest = CIFAKE.access_data("test", DATA_PATH, DEVICE)
     xtest, ytest = CIFAKE.shuffle_dataset(xtest, ytest)
