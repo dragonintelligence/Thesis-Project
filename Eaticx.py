@@ -20,10 +20,10 @@ def images_to_patches(images, patch_size, image_size, channels, embedding_size, 
 
     # Initialization
     new_batch: list = []
-    p = patch_size # rename for easier use
-    c = channels # number of channels
-    i = image_size # width & height
-    patch_dim = (patch_size ** 2) * channels
+    p: int = patch_size # rename for easier use
+    c: int = channels # rename for easier use
+    i: int  = image_size # rename for easier use
+    patch_dim: int = (patch_size ** 2) * channels
 
     # Patching
     for image in images:
@@ -197,12 +197,13 @@ class PerceiverBlock(nn.Module):
         super().__init__()
 
         # Layers
-        self.cross = CrossAttention(embedding)
         self.norm1 = nn.LayerNorm(embedding)
-        self.linear1 = nn.Linear(embedding, embedding)
-        self.self = SelfAttention(heads, embedding)
         self.norm2 = nn.LayerNorm(embedding)
         self.norm3 = nn.LayerNorm(embedding)
+        self.norm4 = nn.LayerNorm(embedding)
+        self.cross = CrossAttention(embedding)
+        self.self = SelfAttention(heads, embedding)
+        self.linear1 = nn.Linear(embedding, embedding)
         self.linear2 = nn.Linear(embedding, embedding)
         self.feedforward = nn.Sequential(
             nn.Linear(embedding, embedding),
@@ -224,11 +225,11 @@ class PerceiverBlock(nn.Module):
         Returns: result of transformer block (same dimensionality)
         """
         batch, latent = inputs
-        output =  self.cross(self.norm1(batch), latent)
+        output =  self.cross(self.norm1(batch), self.norm2(latent))
         output = self.linear1(output)
-        output = output + self.self(self.norm2(output))
+        output = output + self.self(self.norm3(output))
         output = self.linear2(output)
-        output = output + self.feedforward(self.norm3(output))
+        output = output + self.feedforward(self.norm4(output))
         return output
 
 
@@ -295,7 +296,7 @@ class VisionTransformer(nn.Module):
         - number of transformer blocks
         - number of classes (should be 2 for real and fake)
         Layers:
-        - Standard learnable position embeddings as nn.Parameter
+        - Position embeddings
         - Linear layer for unifying the patched input and position embeddings
         - Sequence of transformer blocks
         - Linear layer for assigning class values
@@ -312,8 +313,7 @@ class VisionTransformer(nn.Module):
         self.embedding_size = embedding_size
 
         # Layers
-        nr_patches = (image_size // patch_size) ** 2
-        self.position_embeddings = nn.Parameter(torch.randn(batch_size, nr_patches, embedding_size))
+        self.position_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=nr_patches)
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
         self.classes = nn.Linear(embedding_size, nr_classes)
@@ -330,7 +330,8 @@ class VisionTransformer(nn.Module):
         """
         patch_emb = images_to_patches(batch, self.patch_size, self.image_size, self.channels, self.embedding_size, self.device)
         x, y, z = patch_emb.size()
-        batch = self.unify_embeddings(torch.cat((patch_emb, self.position_embeddings), dim=2).view(-1, 2 * z)).view(x, y, z)
+        pos_emb = self.position_embeddings(torch.arange(y, device=self.device), dim=2)[None, :, :].expand(x, y, z)
+        batch = self.unify_embeddings(torch.cat((patch_emb, pose_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
         batch = self.transformer_blocks(batch)
         batch = torch.mean(batch, dim=1)
         batch = self.classes(batch)

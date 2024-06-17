@@ -40,7 +40,7 @@ PER_LAT: int = 64 # arbitrary as fuck
 PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 120
+NUM_EPOCHS: int = 10
 VIT_LR: float = 0.00004
 PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
@@ -150,9 +150,6 @@ xtest, ytest = CIFAKE.shuffle_dataset(xtest, ytest)
 test_dataloader = CIFAKE.batch_data(xtest, ytest, BATCH_SIZE, DEVICE)
 
 # Run Experiments
-print("Vision Transformer Experiment")
-print()
-experiment("ViT", train_dataloader, test_dataloader)
 print("Perceiver Experiment")
 print()
 experiment("Perceiver", train_dataloader, test_dataloader)
