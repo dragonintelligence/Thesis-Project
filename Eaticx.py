@@ -1,53 +1,14 @@
 ## The library of modules & neural network objects
 
 # Imports
+
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
+import einops
 
-# 1) Functions
-
-# Image Patching Function
-def images_to_patches(images, patch_size, image_size, channels, embedding_size, device):
-    """
-    Function that splits the images from a batch in patches of a given size,
-    then flattens the patches across all channels into linear vectors.
-    Parameters: the batch of images, the patch size, image size, channels,
-    embedding size, device
-    Returns: new tensor representing the batch of patched images
-    """
-
-    # Initialization
-    new_batch: list = []
-    p: int = patch_size # rename for easier use
-    c: int = channels # rename for easier use
-    i: int  = image_size # rename for easier use
-    patch_dim: int = (patch_size ** 2) * channels
-
-    # Patching
-    for image in images:
-        new_image = []
-        for channel in range(c):
-            # For each channel, split in patches & fold patches in linear form
-            new_part = image[channel].unfold(0, p, p).unfold(1, p, p).to(device)
-            new_part = new_part.contiguous().view(i // p, i // p, p ** 2)
-            # Merge channels
-            new_image.append(new_part)
-        # Convert to tensor
-        new_image = torch.stack(new_image, dim = 0).view((i // p) ** 2, c * (p**2)).to(device)
-        # Linear embedding to a lower dimension
-        embedding = nn.Linear(patch_dim, embedding_size).to(device)
-        new_image = embedding(new_image.to(torch.float)).to(device)
-        # Append image
-        new_batch.append(new_image)
-    new_batch = torch.stack(new_batch, dim=0).to(device).to(torch.float)
-    
-    # Return final output
-    return new_batch
-
-
-# 2) Modules
+# 1) Modules
 
 # Cross Attention Module
 class CrossAttention(nn.Module):
@@ -233,7 +194,7 @@ class PerceiverBlock(nn.Module):
         return output
 
 
-# 3) Neural Network Objects
+# 2) Neural Network Objects
 
 # Perceiver Neural Network
 class Perceiver(nn.Module):
@@ -296,6 +257,7 @@ class VisionTransformer(nn.Module):
         - number of transformer blocks
         - number of classes (should be 2 for real and fake)
         Layers:
+        - Patch embeddings
         - Position embeddings
         - Linear layer for unifying the patched input and position embeddings
         - Sequence of transformer blocks
@@ -305,16 +267,13 @@ class VisionTransformer(nn.Module):
         # Initialization
         super().__init__()
 
-        # Parameters
+        # Parameters to use in forward call
         self.device = device
-        self.image_size = image_size
-        self.channels = channels
         self.patch_size = patch_size
-        self.embedding_size = embedding_size
 
         # Layers
-        nr_patches = (image_size // patch_size) ** 2
-        self.position_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=nr_patches)
+        self.patch_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=channels * (patch_size ** 2))
+        self.position_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=(image_size // patch_size) ** 2)
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
         self.classes = nn.Linear(embedding_size, nr_classes)
@@ -329,7 +288,8 @@ class VisionTransformer(nn.Module):
         - Apply a global average operation before applying the last layer
         Returns: output of transformer network
         """
-        patch_emb = images_to_patches(batch, self.patch_size, self.image_size, self.channels, self.embedding_size, self.device)
+        batch = einops.rearrange("b c (h p1) (w p2) -> b (h w) (p1 p2 c)", p1=self.patch_size, p2=self.patch_size)
+        patch_emb = self.patch_embeddings(batch)
         x, y, z = patch_emb.size()
         pos_emb = self.position_embeddings(torch.arange(y, device=self.device))[None, :, :].expand(x, y, z)
         batch = self.unify_embeddings(torch.cat((patch_emb, pos_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
