@@ -41,10 +41,10 @@ PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
 NUM_EPOCHS: int = 120
-VIT_LR: float = 0.00001
-PER_LR: float = 0.00001
+VIT_LR: float = 0.00004
+PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
-MODEL: int = "ViT"
+MODEL: int = "Perceiver"
 
 # Training Function
 def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:

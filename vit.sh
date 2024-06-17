@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=transformer120epochs
+#SBATCH --job-name=vit
 #SBATCH --time=72:00:00
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1

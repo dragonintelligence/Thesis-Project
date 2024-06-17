@@ -1,0 +1,149 @@
+Start loading training images for the Perceiver model
+
+- 10000 FAKE images accessed.
+- 20000 FAKE images accessed.
+- 30000 FAKE images accessed.
+- 40000 FAKE images accessed.
+- 50000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+- 20000 REAL images accessed.
+- 30000 REAL images accessed.
+- 40000 REAL images accessed.
+- 50000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+
+Start training the Perceiver.
+Epoch 1 loss: 0.693
+Epoch 2 loss: 0.691
+Epoch 3 loss: 0.688
+Epoch 4 loss: 0.683
+Epoch 5 loss: 0.679
+Epoch 6 loss: 0.677
+Epoch 7 loss: 0.676
+Epoch 8 loss: 0.675
+Epoch 9 loss: 0.674
+Epoch 10 loss: 0.674
+Epoch 11 loss: 0.674
+Epoch 12 loss: 0.674
+Epoch 13 loss: 0.673
+Epoch 14 loss: 0.673
+Epoch 15 loss: 0.673
+Epoch 16 loss: 0.673
+Epoch 17 loss: 0.673
+Epoch 18 loss: 0.673
+Epoch 19 loss: 0.673
+Epoch 20 loss: 0.673
+Epoch 21 loss: 0.673
+Epoch 22 loss: 0.673
+Epoch 23 loss: 0.673
+Epoch 24 loss: 0.672
+Epoch 25 loss: 0.673
+Epoch 26 loss: 0.672
+Epoch 27 loss: 0.672
+Epoch 28 loss: 0.672
+Epoch 29 loss: 0.672
+Epoch 30 loss: 0.672
+Epoch 31 loss: 0.672
+Epoch 32 loss: 0.672
+Epoch 33 loss: 0.672
+Epoch 34 loss: 0.672
+Epoch 35 loss: 0.672
+Epoch 36 loss: 0.672
+Epoch 37 loss: 0.672
+Epoch 38 loss: 0.672
+Epoch 39 loss: 0.672
+Epoch 40 loss: 0.672
+Epoch 41 loss: 0.672
+Epoch 42 loss: 0.672
+Epoch 43 loss: 0.671
+Epoch 44 loss: 0.671
+Epoch 45 loss: 0.671
+Epoch 46 loss: 0.671
+Epoch 47 loss: 0.671
+Epoch 48 loss: 0.671
+Epoch 49 loss: 0.671
+Epoch 50 loss: 0.671
+Epoch 51 loss: 0.671
+Epoch 52 loss: 0.671
+Epoch 53 loss: 0.671
+Epoch 54 loss: 0.671
+Epoch 55 loss: 0.671
+Epoch 56 loss: 0.671
+Epoch 57 loss: 0.671
+Epoch 58 loss: 0.671
+Epoch 59 loss: 0.671
+Epoch 60 loss: 0.671
+Epoch 61 loss: 0.671
+Epoch 62 loss: 0.671
+Epoch 63 loss: 0.671
+Epoch 64 loss: 0.671
+Epoch 65 loss: 0.671
+Epoch 66 loss: 0.670
+Epoch 67 loss: 0.670
+Epoch 68 loss: 0.670
+Epoch 69 loss: 0.670
+Epoch 70 loss: 0.670
+Epoch 71 loss: 0.670
+Epoch 72 loss: 0.670
+Epoch 73 loss: 0.670
+Epoch 74 loss: 0.670
+Epoch 75 loss: 0.670
+Epoch 76 loss: 0.670
+Epoch 77 loss: 0.670
+Epoch 78 loss: 0.670
+Epoch 79 loss: 0.670
+Epoch 80 loss: 0.670
+Epoch 81 loss: 0.670
+Epoch 82 loss: 0.670
+Epoch 83 loss: 0.670
+Epoch 84 loss: 0.670
+Epoch 85 loss: 0.670
+Epoch 86 loss: 0.670
+Epoch 87 loss: 0.670
+Epoch 88 loss: 0.670
+Epoch 89 loss: 0.670
+Epoch 90 loss: 0.670
+Epoch 91 loss: 0.670
+Epoch 92 loss: 0.669
+Epoch 93 loss: 0.670
+Epoch 94 loss: 0.670
+Epoch 95 loss: 0.670
+Epoch 96 loss: 0.669
+Epoch 97 loss: 0.669
+Epoch 98 loss: 0.669
+Epoch 99 loss: 0.670
+Epoch 100 loss: 0.670
+Epoch 101 loss: 0.669
+Epoch 102 loss: 0.669
+Epoch 103 loss: 0.669
+Epoch 104 loss: 0.670
+Epoch 105 loss: 0.669
+Epoch 106 loss: 0.669
+Epoch 107 loss: 0.669
+Epoch 108 loss: 0.669
+Epoch 109 loss: 0.669
+Epoch 110 loss: 0.669
+Epoch 111 loss: 0.669
+Epoch 112 loss: 0.669
+Epoch 113 loss: 0.669
+Epoch 114 loss: 0.669
+Epoch 115 loss: 0.669
+Epoch 116 loss: 0.669
+Epoch 117 loss: 0.669
+Epoch 118 loss: 0.669
+Epoch 119 loss: 0.669
+Epoch 120 loss: 0.669
+Finished Training
+
+- 10000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Accuracy of the Perceiver on the 20000 test images: 50 %
