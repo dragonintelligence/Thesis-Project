@@ -32,7 +32,7 @@ CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 100
-VIT_EMB: int = 48 # PATCH_SIZE ** 2 x 3 (same formula as ViT-Base)
+VIT_EMB: int = 64
 VIT_HEADS: int = 12 # from paper ViT-Base
 FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
@@ -41,7 +41,7 @@ PER_HEADS: int = 6
 PER_DEPTH: int = 8
 NR_CLASSES: int = 2
 NUM_EPOCHS: int = 10
-VIT_LR: float = 0.0001
+VIT_LR: float = 0.0008 # from paper VIT
 PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
 
@@ -55,8 +55,8 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
     """
 
     optimizer = optim.Adam(lr=lr, params=net.parameters())
-    # if name == "ViT":
-    #     scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.5, total_iters=10000)
+    if name == "ViT":
+        scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.1, total_iters=10000)
     nr_train_batches = len(dataloader)
     print(f"Start training the {name}.")
     

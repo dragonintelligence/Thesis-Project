@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "ViT experiment 10 epochs where I reverted the position embeddings from learnable parameters to just nn.Embedding"
+echo "ViT experiment 10 epochs where LR = 0.0008 and on a schedule with factor from 1 to 0.1 in 10000 steps, plus emb 64"
 python /var/scratch/mdr317/thesis/MainVIT.py
