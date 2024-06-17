@@ -313,6 +313,7 @@ class VisionTransformer(nn.Module):
         self.embedding_size = embedding_size
 
         # Layers
+        nr_patches = (image_size // patch_size) ** 2
         self.position_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=nr_patches)
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
@@ -330,8 +331,8 @@ class VisionTransformer(nn.Module):
         """
         patch_emb = images_to_patches(batch, self.patch_size, self.image_size, self.channels, self.embedding_size, self.device)
         x, y, z = patch_emb.size()
-        pos_emb = self.position_embeddings(torch.arange(y, device=self.device), dim=2)[None, :, :].expand(x, y, z)
-        batch = self.unify_embeddings(torch.cat((patch_emb, pose_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
+        pos_emb = self.position_embeddings(torch.arange(y, device=self.device))[None, :, :].expand(x, y, z)
+        batch = self.unify_embeddings(torch.cat((patch_emb, pos_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
         batch = self.transformer_blocks(batch)
         batch = torch.mean(batch, dim=1)
         batch = self.classes(batch)

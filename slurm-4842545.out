@@ -1,0 +1,43 @@
+Perceiver experiment 10 epochs where I apply layernorm on latents as well
+Loading Training Data.
+
+- 10000 FAKE images accessed.
+- 20000 FAKE images accessed.
+- 30000 FAKE images accessed.
+- 40000 FAKE images accessed.
+- 50000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+- 20000 REAL images accessed.
+- 30000 REAL images accessed.
+- 40000 REAL images accessed.
+- 50000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Loading Test Data.
+
+- 10000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Perceiver Experiment
+
+Start training the Perceiver.
+Epoch 1 loss: 0.694
+Epoch 2 loss: 0.693
+Epoch 3 loss: 0.693
+Epoch 4 loss: 0.692
+Epoch 5 loss: 0.691
+Epoch 6 loss: 0.688
+Epoch 7 loss: 0.685
+Epoch 8 loss: 0.680
+Epoch 9 loss: 0.677
+Epoch 10 loss: 0.675
+Finished Training
+
+Accuracy of the Perceiver on the 20000 test images: 50 %
