@@ -42,7 +42,7 @@ PER_DEPTH: int = 8
 NR_CLASSES: int = 2
 NUM_EPOCHS: int = 10
 VIT_LR: float = 0.00004
-PER_LR: float = 0.00004
+PER_LR: float = 0.0001
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
