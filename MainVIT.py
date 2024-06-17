@@ -35,13 +35,13 @@ VIT_DEPTH: int = 12 # from paper ViT-Base
 # PER_HEADS: int = 6
 # PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 1 # to test
+NR_EPOCHS: int = 1 # to test
 VIT_LR: float = 0.0003 # from paper VIT
 # PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
-def train(net, name: str, t, v, epochs: int, criterion, lr: float, wd: float, clip: int, eval: int, device: str) -> None:
+def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: float, clip: int, eval: int, device: str) -> None:
     """
     Function that trains a chosen Neural Network.
     Parameters: Neural Network object, name for save file, training dataset,
@@ -55,18 +55,18 @@ def train(net, name: str, t, v, epochs: int, criterion, lr: float, wd: float, cl
     print(f"Start training the {name}.")
     steps: int = 0
 
-    for epoch in range(nr_epochs):
+    for epoch in range(epochs):
         running_loss: float = 0.0
         for i, data in enumerate(t, 0): 
             steps += 1 
             # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data["img"].to(device), data["label"].to(device)
+            inputs, labels = data["img"].to(device).to(torch.long), data["label"].to(device).to(torch.long)
 
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            outputs = net(inputs).to(device)
+            outputs = net(inputs).to(device).to(torch.float)
             loss = criterion(outputs, labels)
             loss.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
@@ -118,13 +118,13 @@ def experiment(model: str, dataloaders: tuple) -> None:
     #  Training Loop
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, VIT_EMB, VIT_HEADS, FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
-        train(desired_net, model, tr, val, NUM_EPOCHS, CRITERION, VIT_LR, \
+            PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
             WEIGHT_DECAY, GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
-        train(desired_net, model, tr, val, NUM_EPOCHS, CRITERION, PER_LR, \
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
             WEIGHT_DECAY, GRADIENT_CLIP, VAL_TIMES, DEVICE)
 
     print()

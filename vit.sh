@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "ViT experiment 10 epochs some original hyperparameters, but with LR schedule, initial lr 0.0003"
+echo "Major changes ViT experiment 1 epoch"
 python /var/scratch/mdr317/thesis/MainVIT.py

@@ -288,7 +288,7 @@ class VisionTransformer(nn.Module):
         - Apply a global average operation before applying the last layer
         Returns: output of transformer network
         """
-        batch = einops.rearrange("b c (h p1) (w p2) -> b (h w) (p1 p2 c)", p1=self.patch_size, p2=self.patch_size)
+        batch = einops.rearrange(batch, "b c (h p1) (w p2) -> b (h w) (p1 p2 c)", p1=self.patch_size, p2=self.patch_size)
         patch_emb = self.patch_embeddings(batch)
         x, y, z = patch_emb.size()
         pos_emb = self.position_embeddings(torch.arange(y, device=self.device))[None, :, :].expand(x, y, z)
