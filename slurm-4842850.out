@@ -1,4 +1,4 @@
-ViT experiment 10 epochs where LR = 0.0008 and on a schedule with factor from 1 to 0.1 in 10000 steps, plus emb 64
+ViT experiment 10 epochs same LR schedule with start 0.0003 AND emb = 128
 Loading Training Data.
 
 - 10000 FAKE images accessed.
@@ -28,16 +28,16 @@ All images are accessed.
 Vision Transformer Experiment
 
 Start training the ViT.
-Epoch 1 loss: 0.705
+Epoch 1 loss: 0.708
 Epoch 2 loss: 0.694
-Epoch 3 loss: 0.678
-Epoch 4 loss: 0.671
-Epoch 5 loss: 0.667
-Epoch 6 loss: 0.664
-Epoch 7 loss: 0.662
-Epoch 8 loss: 0.662
-Epoch 9 loss: 0.657
-Epoch 10 loss: 0.655
+Epoch 3 loss: 0.694
+Epoch 4 loss: 0.693
+Epoch 5 loss: 0.681
+Epoch 6 loss: 0.671
+Epoch 7 loss: 0.667
+Epoch 8 loss: 0.665
+Epoch 9 loss: 0.664
+Epoch 10 loss: 0.661
 Finished Training
 
-Accuracy of the ViT on the 20000 test images: 58 %
+Accuracy of the ViT on the 20000 test images: 56 %

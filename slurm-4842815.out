@@ -1,1 +1,43 @@
 ViT experiment 10 epochs where LR = 0.00008 and embedding size increased to 64
+Loading Training Data.
+
+- 10000 FAKE images accessed.
+- 20000 FAKE images accessed.
+- 30000 FAKE images accessed.
+- 40000 FAKE images accessed.
+- 50000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+- 20000 REAL images accessed.
+- 30000 REAL images accessed.
+- 40000 REAL images accessed.
+- 50000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Loading Test Data.
+
+- 10000 FAKE images accessed.
+All FAKE images are accessed.
+
+- 10000 REAL images accessed.
+All REAL images are accessed.
+
+All images are accessed.
+Vision Transformer Experiment
+
+Start training the ViT.
+Epoch 1 loss: 0.695
+Epoch 2 loss: 0.691
+Epoch 3 loss: 0.679
+Epoch 4 loss: 0.670
+Epoch 5 loss: 0.666
+Epoch 6 loss: 0.665
+Epoch 7 loss: 0.663
+Epoch 8 loss: 0.658
+Epoch 9 loss: 0.652
+Epoch 10 loss: 0.646
+Finished Training
+
+Accuracy of the ViT on the 20000 test images: 50 %
