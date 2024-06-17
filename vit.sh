@@ -12,4 +12,4 @@ conda activate
 cd /var/scratch/mdr317/thesis
 
 echo "ViT experiment 10 epochs where I reverted the position embeddings from learnable parameters to just nn.Embedding"
-python /var/scratch/mdr317/thesis/Main VIT only.py
+python /var/scratch/mdr317/thesis/MainVIT.py
