@@ -1,7 +1,6 @@
 ## Main Script
 
 # Importing scripts
-import CIFAKE # the dataset loading functions
 import Eaticx # the neural network objects
 
 # Importing more libraries
