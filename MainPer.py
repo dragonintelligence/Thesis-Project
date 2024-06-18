@@ -25,7 +25,7 @@ BATCH_SIZE: int = 256
 VAL_TIMES: int = 5
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
-VIT_EMB: int = 64 # next power of 2 after 48
+EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
@@ -109,12 +109,12 @@ def experiment(model: str, dataloaders: tuple) -> None:
     #  Training Loop
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+            PATCH_SIZE, EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
         training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
+            EMB, PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
         training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
 

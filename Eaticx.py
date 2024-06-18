@@ -199,7 +199,7 @@ class PerceiverBlock(nn.Module):
 # Perceiver Neural Network
 class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
-        latent_size: int, attention_heads: int, depth: int, 
+        embedding_size: int, latent_size: int, attention_heads: int, depth: int, 
         nr_classes: int) -> None:
 
         # Initialization
@@ -210,12 +210,12 @@ class Perceiver(nn.Module):
         self.depth = depth
 
         # Layers
-        self.position_embeddings = nn.Embedding(image_size ** 2, channels)
-        self.latents = nn.Parameter(torch.randn(batch_size, latent_size, 2 * channels))
-        self.perceiver_block1 = PerceiverBlock(attention_heads, 2 *  channels)
+        self.expand_channels = nn.Conv1d(channels, embedding_size, 1)
+        self.position_embeddings = nn.Embedding(image_size ** 2, embedding_size)
+        self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
+        self.perceiver_block1 = PerceiverBlock(attention_heads, 2 * embedding_size)
         #self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
         self.classes = nn.Linear(2 * channels, nr_classes)
-
 
     def forward(self, batch: list) -> list:
         """
@@ -228,7 +228,8 @@ class Perceiver(nn.Module):
         Returns: output of transformer network
         """
         b, c, h, w = batch.size()
-        batch = torch.permute(batch.view(b, c, h * w), (0, 2, 1))
+        batch = self.expand_channels(batch.view(b, c, h * w))
+        batch = torch.permute(batch, (0, 2, 1))
         pos_emb = self.position_embeddings(torch.arange(h*w, device=self.device))[None, :, :].expand(b, h*w, c)
         batch = torch.cat((batch, pos_emb), dim=2)
         batch = self.perceiver_block1((batch, self.latents))
