@@ -1,52 +1,46 @@
 ## Main Script
 
-# Init based on platform / device
-import os
-import sys
-
-try:
-    from google.colab import drive
-    COLAB: bool = True
-    drive.mount('/content/drive')
-    sys.path.append('/content/drive/My Drive/Colab Notebooks')
-    DATA_PATH = os.path.join(sys.path[-1], "Dataset")
-except:
-    COLAB: bool = False
-    sys.path.append(os.getcwd())
-    DATA_PATH = os.path.join(os.getcwd(), "data")
-
 # Importing scripts
 import CIFAKE # the dataset loading functions
 import Eaticx # the neural network objects
 
 # Importing more libraries
+import os
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
+from torch.utils.data import DataLoader, random_split
+from datasets import load_dataset
+from torchvision.transforms import v2
 
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+PATH: str = "dragonintelligence/CIFAKE-image-dataset"
 CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
-BATCH_SIZE: int = 100
-VIT_EMB: int = 48 # PATCH_SIZE ** 2 x 3 (same formula as ViT-Base)
+BATCH_SIZE: int = 256
+VAL_TIMES: int = 5
+SPLIT: int = 0.5
+GRADIENT_CLIP: int = 1
+VIT_EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
-FF: int = 4 # from paper ViT-Base
+VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-PER_LAT: int = 64 # arbitrary as fuck
-PER_HEADS: int = 6
-PER_DEPTH: int = 8
+# PER_LAT: int = 64 # arbitrary as fuck
+# PER_HEADS: int = 6
+# PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NUM_EPOCHS: int = 120
-VIT_LR: float = 0.00004
-PER_LR: float = 0.00004
+NR_EPOCHS: int = 7
+VIT_LR: float = 0.0003 # from paper VIT
+# PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
-def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, device: str) -> None:
+def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
     """
     Function that trains a chosen Neural Network.
     Parameters: Neural Network object, name for save file, training dataset,
@@ -55,104 +49,111 @@ def train(net, name, dataloader: list, nr_epochs: int, criterion, lr: float, dev
     """
 
     optimizer = optim.Adam(lr=lr, params=net.parameters())
-    # if name == "ViT":
-    #     scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.5, total_iters=10000)
-    nr_train_batches = len(dataloader)
+    if name == "ViT":
+        scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
-    
-    for epoch in range(nr_epochs):
-        running_loss: float = 0.0
-        for i, data in enumerate(dataloader, 0): 
+    print(len(t))
+    for epoch in range(epochs):
+        for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            inputs = inputs.type(torch.LongTensor).to(device)
-            labels = labels.type(torch.LongTensor).to(device)
+            inputs, labels = data["img"].to(device), data["label"].to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            outputs = net(inputs)
-            outputs = outputs.type(torch.FloatTensor).to(device)
+            outputs = net(inputs).to(device)
             loss = criterion(outputs, labels)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
-
-            # print statistics
-            running_loss += loss.item()
-            if i == nr_train_batches - 1:
-                print(f'Epoch {epoch + 1} loss: {running_loss / (i+1):.3f}')
+            if name == "ViT":
+                scheduler.step()
+            if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
+                accuracy, vloss = accuracy_test(v, net, criterion, device)
+                print(f'Epoch {epoch + 1}:')
+                print(f'- Training running loss: {loss.item():.3f}')
+                print(f"- Validation loss: {vloss:.3f}")
+                print(f"- Validation accuracy: {accuracy:.3f} %")
                 running_loss = 0.0
-        # if name == "ViT":
-        #     scheduler.step()
+        
         # elif name == "Perceiver":
         #     if epoch in [84, 102, 114]:
         #         for g in optimizer.param_groups:
         #             g['lr'] /= 10  
-    print('Finished Training')
+    print(f'Finished Training the {name}.')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
 
 # Test Accuracy Function
-
-def accuracy_test(dataloader, net, name) -> None:
+def accuracy_test(dataloader, net, criterion, device: str) -> tuple:
+    net.eval()
     correct: int = 0
     total: int = 0
-
-    # since we're not training, we don't need to calculate the gradients for our outputs
+    loss: float = 0.0
     with torch.no_grad():
         for data in dataloader:
-            sentences, labels = data
-            # calculate outputs by running images through the network
-            outputs = net(sentences)
-            predicted = torch.argmax(outputs.data, dim=1)
+            inputs, labels = data["img"].to(device), data["label"].to(device)
+            outputs = net(inputs).to(device)
+            _, predicted = torch.max(outputs.data, dim=1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            l = criterion(outputs, labels)
+            loss += l.item() * inputs.size(0)
 
-    print(f'Accuracy of the {name} on the 20000 test images: {100 * correct // total} %')
+    accuracy: float = 100 * correct / total
+    loss /= total
+    return accuracy, loss
 
-def experiment(model: str, train_dataloader, test_dataloader) -> None:
-    
+def experiment(model: str, dataloaders: tuple) -> None:
+    tr, val, te = dataloaders
+
     #  Training Loop
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, VIT_EMB, VIT_HEADS, FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
-        train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
-            VIT_LR, DEVICE)
+            PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
+            GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
-        train(desired_net, model, train_dataloader, NUM_EPOCHS, CRITERION, \
-            PER_LR, DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
+            GRADIENT_CLIP, VAL_TIMES, DEVICE)
 
     print()
     
     # Test Accuracy 
-    
-    PATH: str = f'./eaticx-{model}.pth'
-    desired_net.load_state_dict(torch.load(PATH))
-    accuracy_test(test_dataloader, desired_net, model)
+    path: str = f'./eaticx-{model}.pth'
+    desired_net.load_state_dict(torch.load(path))
+    tacc, tloss = accuracy_test(te, desired_net, CRITERION, DEVICE)
+    print(f"Test loss: {tloss:.3f}")
+    print(f"Test accuracy: {tacc:.3f} %")
+
+# Transforming images within a batch
+def batch_transform(batch):
+    # turn the images into PyTorch tensors & normalize the images to [-1, 1] range
+    main_transform = v2.Compose([v2.ToTensor(), v2.Lambda(lambda tensor: (tensor * 2) - 1)])
+    batch["img"] = [main_transform(x.convert("RGB")) for x in batch["image"]]
+    del batch["image"]
+    return batch
+
 
 # Main
 
-# Training Data
-print("Loading Training Data.")
-print()
-xtrain, ytrain = CIFAKE.access_data("train", DATA_PATH, DEVICE)
-xtrain, ytrain = CIFAKE.shuffle_dataset(xtrain, ytrain)
-train_dataloader = CIFAKE.batch_data(xtrain, ytrain, BATCH_SIZE, DEVICE)
-
-# Test Data
-print("Loading Test Data.")
-print()
-xtest, ytest = CIFAKE.access_data("test", DATA_PATH, DEVICE)
-xtest, ytest = CIFAKE.shuffle_dataset(xtest, ytest)
-test_dataloader = CIFAKE.batch_data(xtest, ytest, BATCH_SIZE, DEVICE)
+# Data - Training = 100000, Val = 10000, Test = 10000
+train = load_dataset(PATH, split = "train").with_transform(batch_transform)
+train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+val_test_split = load_dataset(PATH, split = "test").train_test_split(test_size=SPLIT)
+val = val_test_split["train"].with_transform(batch_transform)
+val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False)
+test = val_test_split["test"].with_transform(batch_transform)
+test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False)
 
 # Run Experiments
 print("Vision Transformer Experiment")
 print()
-experiment("ViT", train_dataloader, test_dataloader)
+experiment("ViT", (train_dataloader, val_dataloader, test_dataloader))
+print()
 print("Perceiver Experiment")
 print()
-experiment("Perceiver", train_dataloader, test_dataloader)
+experiment("Perceiver", (train_dataloader, val_dataloader, test_dataloader))

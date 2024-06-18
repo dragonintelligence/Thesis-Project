@@ -22,7 +22,7 @@ PATH: str = "dragonintelligence/CIFAKE-image-dataset"
 CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
-BATCH_SIZE: int = 512
+BATCH_SIZE: int = 256
 VAL_TIMES: int = 5
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
@@ -30,13 +30,13 @@ VIT_EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-# PER_LAT: int = 64 # arbitrary as fuck
-# PER_HEADS: int = 6
-# PER_DEPTH: int = 8
+PER_LAT: int = 64 # arbitrary as fuck
+PER_HEADS: int = 6
+PER_DEPTH: int = 8
 NR_CLASSES: int = 2
 NR_EPOCHS: int = 7
 VIT_LR: float = 0.0003 # from paper VIT
-# PER_LR: float = 0.00004
+PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
