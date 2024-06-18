@@ -74,7 +74,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
             # print statistics
             running_loss += loss.item()
 
-            if i != 0 and i % (len(t) // eval) == 0:
+            if (i + 1) % (len(t) // eval) == 0:
                 tloss: float = running_loss / (i + 1)
                 accuracy, vloss = accuracy_test(v, net, criterion, device)
                 print(f'Epoch {epoch + 1}:')
@@ -93,6 +93,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
 
 # Test Accuracy Function
 def accuracy_test(dataloader, net, criterion, device: str) -> tuple:
+    net.eval()
     correct: int = 0
     total: int = 0
     loss: float = 0.0
