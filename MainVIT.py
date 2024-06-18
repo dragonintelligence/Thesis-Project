@@ -35,7 +35,7 @@ VIT_DEPTH: int = 12 # from paper ViT-Base
 # PER_HEADS: int = 6
 # PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 1 # to test
+NR_EPOCHS: int = 7 # from paper VIT
 VIT_LR: float = 0.0003 # from paper VIT
 # PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
@@ -53,20 +53,18 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
     if name == "ViT":
         scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
-    steps: int = 0
-
+    print(len(t))
     for epoch in range(epochs):
         running_loss: float = 0.0
-        for i, data in enumerate(t, 0): 
-            steps += 1 
+        for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data["img"].to(device).to(torch.long), data["label"].to(device).to(torch.long)
+            inputs, labels = data["img"].to(device), data["label"].to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            outputs = net(inputs).to(device).to(torch.float)
+            outputs = net(inputs).to(device)
             loss = criterion(outputs, labels)
             loss.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
@@ -76,9 +74,9 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
             # print statistics
             running_loss += loss.item()
 
-            if i != 0 and i % (len(dataloader) // eval) == 0:
+            if i != 0 and i % (len(t) // eval) == 0:
                 tloss: float = running_loss / (i + 1)
-                accuracy, vloss = accuracy_test(v, net, name)
+                accuracy, vloss = accuracy_test(v, net, criterion, device)
                 print(f'Epoch {epoch + 1}:')
                 print(f'- Training running loss: {tloss:.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
@@ -94,7 +92,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
     torch.save(net.state_dict(), PATH)
 
 # Test Accuracy Function
-def accuracy_test(dataloader, net, criterion) -> tuple:
+def accuracy_test(dataloader, net, criterion, device: str) -> tuple:
     correct: int = 0
     total: int = 0
     loss: float = 0.0
@@ -102,7 +100,7 @@ def accuracy_test(dataloader, net, criterion) -> tuple:
         for data in dataloader:
             inputs, labels = data["img"].to(device), data["label"].to(device)
             outputs = net(inputs).to(device)
-            predicted = torch.argmax(outputs.data, dim=1)
+            _, predicted = torch.max(outputs.data, dim=1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
             l = criterion(outputs, labels)
@@ -132,7 +130,7 @@ def experiment(model: str, dataloaders: tuple) -> None:
     # Test Accuracy 
     path: str = f'./eaticx-{model}.pth'
     desired_net.load_state_dict(torch.load(path))
-    tacc, tloss = accuracy_test(te, desired_net, CRITERION)
+    tacc, tloss = accuracy_test(te, desired_net, CRITERION, DEVICE)
     print(f"Test loss: {tloss:.3f}")
     print(f"Test accuracy: {tacc:.3f} %")
 

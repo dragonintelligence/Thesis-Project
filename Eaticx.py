@@ -272,7 +272,7 @@ class VisionTransformer(nn.Module):
         self.patch_size = patch_size
 
         # Layers
-        self.patch_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=channels * (patch_size ** 2))
+        self.patch_embeddings = nn.Linear(channels * (patch_size ** 2), embedding_size)
         self.position_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=(image_size // patch_size) ** 2)
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
