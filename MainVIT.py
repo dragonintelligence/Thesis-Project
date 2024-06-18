@@ -22,12 +22,11 @@ PATH: str = "dragonintelligence/CIFAKE-image-dataset"
 CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
-BATCH_SIZE: int = 128 
-VAL_TIMES: int = 2
+BATCH_SIZE: int = 512
+VAL_TIMES: int = 5
 SPLIT: int = 0.5
-WEIGHT_DECAY: float = 0.1
 GRADIENT_CLIP: int = 1
-VIT_EMB: int = 48 # just the patch size
+VIT_EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
@@ -35,13 +34,13 @@ VIT_DEPTH: int = 12 # from paper ViT-Base
 # PER_HEADS: int = 6
 # PER_DEPTH: int = 8
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 7 # from paper VIT
+NR_EPOCHS: int = 7
 VIT_LR: float = 0.0003 # from paper VIT
 # PER_LR: float = 0.00004
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
-def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: float, clip: int, eval: int, device: str) -> None:
+def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
     """
     Function that trains a chosen Neural Network.
     Parameters: Neural Network object, name for save file, training dataset,
@@ -49,13 +48,12 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
     Prints: Cross Entropy loss at the end of each epoch
     """
 
-    optimizer = optim.Adam(lr=lr, params=net.parameters(), weight_decay=wd)
+    optimizer = optim.Adam(lr=lr, params=net.parameters())
     if name == "ViT":
         scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
     print(len(t))
     for epoch in range(epochs):
-        running_loss: float = 0.0
         for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data["img"].to(device), data["label"].to(device)
@@ -67,18 +65,14 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, wd: f
             outputs = net(inputs).to(device)
             loss = criterion(outputs, labels)
             loss.backward()
-            grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
+            torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
             if name == "ViT":
                 scheduler.step()
-            # print statistics
-            running_loss += loss.item()
-
-            if (i + 1) % (len(t) // eval) == 0:
-                tloss: float = running_loss / (i + 1)
+            if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
                 accuracy, vloss = accuracy_test(v, net, criterion, device)
                 print(f'Epoch {epoch + 1}:')
-                print(f'- Training running loss: {tloss:.3f}')
+                print(f'- Training running loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
                 print(f"- Validation accuracy: {accuracy:.3f} %")
                 running_loss = 0.0
@@ -119,12 +113,12 @@ def experiment(model: str, dataloaders: tuple) -> None:
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
         training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
-            WEIGHT_DECAY, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+            GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
         training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
-            WEIGHT_DECAY, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+            GRADIENT_CLIP, VAL_TIMES, DEVICE)
 
     print()
     

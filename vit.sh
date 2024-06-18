@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Major changes ViT experiment 1 epoch"
+echo "VIT 7 epochs 512 bach size"
 python /var/scratch/mdr317/thesis/MainVIT.py
