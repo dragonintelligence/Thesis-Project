@@ -51,7 +51,6 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     if name == "ViT":
         scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
-    print(len(t))
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
@@ -141,12 +140,12 @@ def batch_transform(batch):
 
 # Data - Training = 100000, Val = 10000, Test = 10000
 train = load_dataset(PATH, split = "train").with_transform(batch_transform)
-train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
 val_test_split = load_dataset(PATH, split = "test").train_test_split(test_size=SPLIT)
 val = val_test_split["train"].with_transform(batch_transform)
-val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False)
+val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 test = val_test_split["test"].with_transform(batch_transform)
-test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False)
+test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 
 # Run Experiments
 print("Perceiver Experiment")

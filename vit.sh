@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "VIT 7 epochs 512 bach size"
+echo "VIT 10 epochs"
 python /var/scratch/mdr317/thesis/MainVIT.py

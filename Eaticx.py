@@ -231,8 +231,8 @@ class Perceiver(nn.Module):
         batch = torch.permute(batch.view(b, c, h * w), (0, 2, 1))
         pos_emb = self.position_embeddings(torch.arange(h*w, device=self.device))[None, :, :].expand(b, h*w, c)
         batch = torch.cat((batch, pos_emb), dim=2)
-        batch = self.perceiver_block1((batch, latents))
-        # testing only one block
+        batch = self.perceiver_block1((batch, self.latents))
+        batch = torch.mean(batch, dim=1)
         batch = self.classes(batch)
         return batch
 
