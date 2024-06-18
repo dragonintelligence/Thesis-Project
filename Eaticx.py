@@ -210,10 +210,10 @@ class Perceiver(nn.Module):
         self.depth = depth
 
         # Layers
-        self.pos_emb = nn.Parameter(torch.randn(batch_size, image_size ** 2, channels))
+        self.position_embeddings = nn.Embedding(image_size ** 2, channels)
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, 2 * channels))
         self.perceiver_block1 = PerceiverBlock(attention_heads, 2 *  channels)
-        self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
+        #self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
         self.classes = nn.Linear(2 * channels, nr_classes)
 
 
@@ -227,16 +227,15 @@ class Perceiver(nn.Module):
         - Apply a global average operation before applying the last layer
         Returns: output of transformer network
         """
-        a, b, c, d = batch.size()
-        batch = batch.to(torch.float).view(a, b, c * d)
-        batch = batch.view(a, c * d, b)
-        batch = torch.cat((batch, self.pos_emb), dim=2).to(self.device)
-        output = self.perceiver_block1((batch, self.latents))
-        for block in range(self.depth - 1):
-            output = self.perceiver_block2((batch, output))
-        output = torch.mean(output, dim=1)
-        output = self.classes(output)
-        return output
+        b, c, h, w = batch.size()
+        batch = torch.view(b, c, h * w).permute(0, 2, 1)
+        pos_emb = self.position_embeddings(torch.arange(h*w, device=self.device))[None, :, :].expand(b, h*w, c)
+        batch = torch.cat((batch, pos_emb), dim=2)
+        batch = self.perceiver_block1((batch, latents))
+        # testing only one block
+        batch = self.classes(batch)
+        return batch
+
 
 # VisionTransformer Neural Network
 class VisionTransformer(nn.Module):
@@ -273,7 +272,7 @@ class VisionTransformer(nn.Module):
 
         # Layers
         self.patch_embeddings = nn.Linear(channels * (patch_size ** 2), embedding_size)
-        self.position_embeddings = nn.Embedding(embedding_dim=embedding_size, num_embeddings=(image_size // patch_size) ** 2)
+        self.position_embeddings = nn.Embedding((image_size // patch_size) ** 2, embedding_size)
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
         self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
         self.classes = nn.Linear(embedding_size, nr_classes)
