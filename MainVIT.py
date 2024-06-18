@@ -29,13 +29,13 @@ VIT_EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-PER_LAT: int = 64 # arbitrary as fuck
-PER_HEADS: int = 6
-PER_DEPTH: int = 8
+PER_LAT: int = 64 # same as VIT
+PER_HEADS: int = 8 # from paper Perceiver
+PER_DEPTH: int = 8 # ?
 NR_CLASSES: int = 2
 NR_EPOCHS: int = 7
 VIT_LR: float = 0.0003 # from paper VIT
-PER_LR: float = 0.00004
+PER_LR: float = 0.0003 # same as VIT
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function

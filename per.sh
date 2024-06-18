@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver experiment 10 epochs where I apply layernorm on latents as well"
+echo "Perceiver mini changes please work"
 python /var/scratch/mdr317/thesis/MainPer.py
