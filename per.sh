@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver change from yesterday that I couldn't test"
+echo "Perceiver with 2 blocks instead of 1"
 python /var/scratch/mdr317/thesis/MainPer.py

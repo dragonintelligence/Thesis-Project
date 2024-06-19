@@ -185,7 +185,7 @@ class PerceiverBlock(nn.Module):
         Returns: result of transformer block (same dimensionality)
         """
         batch, latent = inputs
-        output =  self.cross(self.norm1(batch), latent)
+        output =  self.cross_attention(self.norm1(batch), latent)
         output = self.linear1(output)
         output = output + self.latent_transformer(self.norm2(output))
         output = self.linear2(output)
