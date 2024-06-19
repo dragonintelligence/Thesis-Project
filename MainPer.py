@@ -38,6 +38,9 @@ NR_EPOCHS: int = 10
 LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
 
+# weights and Biases
+wandb.init(project="EaticxPerceiver")
+
 # Training Function
 def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
     """
@@ -63,17 +66,37 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
             outputs = net(inputs).to(device)
             loss = criterion(outputs, labels)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
+            grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
             if name == "ViT":
                 scheduler.step()
+            
+            # Weights and Biases Log
+            wandb.log(
+                {
+                    "Training Loss": loss.item(),
+                    "Learning Rate": optimizer.param_groups[0]["lr"],
+                    "epoch": epoch,
+                    "grad_norm": grad_norm
+                }
+            )
+
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
+                # Calculating & printing
                 accuracy, vloss = accuracy_test(v, net, criterion, device)
                 print(f'Epoch {epoch + 1}:')
                 print(f'- Training running loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
                 print(f"- Validation accuracy: {accuracy:.3f} %")
                 running_loss = 0.0
+                
+                # Weights & Biases log
+                wandb.log(
+                    {
+                        "Validation Loss": vloss,
+                        "Validation Accuracy": accuracy
+                    }
+                )
         
         # elif name == "Perceiver":
         #     if epoch in [84, 102, 114]:

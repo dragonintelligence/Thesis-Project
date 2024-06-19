@@ -6,6 +6,7 @@ import Eaticx # the neural network objects
 # Importing more libraries
 import os
 import sys
+import wandb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -22,21 +23,24 @@ CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 256
-VAL_TIMES: int = 2
+VAL_TIMES: int = 5
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
-VIT_EMB: int = 64 # next power of 2 after 48
+EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-PER_LAT: int = 64 # same as VIT
-PER_HEADS: int = 8 # from paper Perceiver
-PER_DEPTH: int = 8 # ?
+PER_LAT: int = 64 # same as EMB
+PER_HEADS: int = 8
+PER_DEPTH: int = 2 # test
+PER_LT_DEPTH: int = 4
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 10
-VIT_LR: float = 0.0003 # from paper VIT
-PER_LR: float = 0.0003 # same as VIT
+NR_EPOCHS: int = 15
+LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
+
+# weights and Biases
+wandb.init(project="EaticxViT")
 
 # Training Function
 def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
@@ -51,7 +55,6 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     if name == "ViT":
         scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
-    print(len(t))
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
@@ -64,17 +67,37 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
             outputs = net(inputs).to(device)
             loss = criterion(outputs, labels)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
+            grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
             if name == "ViT":
                 scheduler.step()
+            
+            # Weights and Biases Log
+            wandb.log(
+                {
+                    "Training Loss": loss.item(),
+                    "Learning Rate": optimizer.param_groups[0]["lr"],
+                    "epoch": epoch,
+                    "grad_norm": grad_norm
+                }
+            )
+
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
+                # Calculating & printing
                 accuracy, vloss = accuracy_test(v, net, criterion, device)
                 print(f'Epoch {epoch + 1}:')
                 print(f'- Training running loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
                 print(f"- Validation accuracy: {accuracy:.3f} %")
                 running_loss = 0.0
+                
+                # Weights & Biases log
+                wandb.log(
+                    {
+                        "Validation Loss": vloss,
+                        "Validation Accuracy": accuracy
+                    }
+                )
         
         # elif name == "Perceiver":
         #     if epoch in [84, 102, 114]:
@@ -110,13 +133,13 @@ def experiment(model: str, dataloaders: tuple) -> None:
     #  Training Loop
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
+            PATCH_SIZE, EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
+            EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LT_DEPTH, NR_CLASSES).to(DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
 
     print()
@@ -141,12 +164,12 @@ def batch_transform(batch):
 
 # Data - Training = 100000, Val = 10000, Test = 10000
 train = load_dataset(PATH, split = "train").with_transform(batch_transform)
-train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
 val_test_split = load_dataset(PATH, split = "test").train_test_split(test_size=SPLIT)
 val = val_test_split["train"].with_transform(batch_transform)
-val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False)
+val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 test = val_test_split["test"].with_transform(batch_transform)
-test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False)
+test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 
 # Run Experiments
 print("Vision Transformer Experiment")

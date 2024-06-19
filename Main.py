@@ -25,17 +25,17 @@ BATCH_SIZE: int = 256
 VAL_TIMES: int = 5
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
-VIT_EMB: int = 64 # next power of 2 after 48
+EMB: int = 64 # next power of 2 after 48
 VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
-# PER_LAT: int = 64 # arbitrary as fuck
-# PER_HEADS: int = 6
-# PER_DEPTH: int = 8
+PER_LAT: int = 64 # same as EMB
+PER_HEADS: int = 8
+PER_DEPTH: int = 2 # test
+PER_LT_DEPTH: int = 4
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 7
-VIT_LR: float = 0.0003 # from paper VIT
-# PER_LR: float = 0.00004
+NR_EPOCHS: int = 10
+LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
@@ -51,7 +51,6 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     if name == "ViT":
         scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
-    print(len(t))
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
@@ -110,13 +109,13 @@ def experiment(model: str, dataloaders: tuple) -> None:
     #  Training Loop
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
+            PATCH_SIZE, EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PER_LAT, PER_HEADS, PER_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
+            EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LT_DEPTH, NR_CLASSES).to(DEVICE)
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
 
     print()
@@ -141,18 +140,17 @@ def batch_transform(batch):
 
 # Data - Training = 100000, Val = 10000, Test = 10000
 train = load_dataset(PATH, split = "train").with_transform(batch_transform)
-train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
 val_test_split = load_dataset(PATH, split = "test").train_test_split(test_size=SPLIT)
 val = val_test_split["train"].with_transform(batch_transform)
-val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False)
+val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 test = val_test_split["test"].with_transform(batch_transform)
-test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False)
+test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 
 # Run Experiments
 print("Vision Transformer Experiment")
 print()
 experiment("ViT", (train_dataloader, val_dataloader, test_dataloader))
-print()
 print("Perceiver Experiment")
 print()
 experiment("Perceiver", (train_dataloader, val_dataloader, test_dataloader))
