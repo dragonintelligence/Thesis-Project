@@ -190,7 +190,7 @@ class PerceiverBlock(nn.Module):
         output = output + self.latent_transformer(self.norm2(output))
         output = self.linear2(output)
         output = output + self.mlp(self.norm3(output))
-        return output
+        return (batch, output)
 
 
 # 2) Neural Network Objects
@@ -198,8 +198,8 @@ class PerceiverBlock(nn.Module):
 # Perceiver Neural Network
 class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
-        embedding_size: int, latent_size: int, attention_heads: int, depth: int, 
-        nr_classes: int) -> None:
+        embedding_size: int, latent_size: int, attention_heads: int, perceiver_depth: int, 
+        transformer_depth: int, nr_classes: int) -> None:
 
         # Initialization
         super().__init__()
@@ -211,7 +211,7 @@ class Perceiver(nn.Module):
         self.expand_channels = nn.Conv1d(channels, embedding_size, 1)
         self.position_embeddings = nn.Embedding(image_size ** 2, embedding_size)
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
-        self.perceiver_block = PerceiverBlock(attention_heads, 2 * embedding_size, depth)
+        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, 2 * embedding_size, transformer_depth) for block in range(perceiver_depth)])
         self.classes = nn.Linear(2 * embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
@@ -230,10 +230,10 @@ class Perceiver(nn.Module):
         b, i, e = batch.size() # b is the same, i = h * w, e = expanded channels
         pos_emb = self.position_embeddings(torch.arange(i, device=self.device))[None, :, :].expand(b, i, e)
         batch = torch.cat((batch, pos_emb), dim=2)
-        batch = self.perceiver_block1((batch, self.latents))
-        batch = torch.mean(batch, dim=1)
-        batch = self.classes(batch)
-        return batch
+        batch, output = self.perceiver_blocks((batch, self.latents))
+        output = torch.mean(output, dim=1)
+        output = self.classes(output)
+        return output
 
 
 # VisionTransformer Neural Network
@@ -291,7 +291,7 @@ class VisionTransformer(nn.Module):
         x, y, z = patch_emb.size()
         pos_emb = self.position_embeddings(torch.arange(y, device=self.device))[None, :, :].expand(x, y, z)
         batch = self.unify_embeddings(torch.cat((patch_emb, pos_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
-        batch = self.transformer_blocks(batch)
-        batch = torch.mean(batch, dim=1)
-        batch = self.classes(batch)
-        return batch
+        output = self.transformer_blocks(output)
+        output = torch.mean(output, dim=1)
+        output = self.classes(output)
+        return output
