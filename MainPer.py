@@ -6,6 +6,7 @@ import Eaticx # the neural network objects
 # Importing more libraries
 import os
 import sys
+import wandb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver - latent transformer depth 4"
+echo "Perceiver 15 epochs and WANDB"
 python /var/scratch/mdr317/thesis/MainPer.py

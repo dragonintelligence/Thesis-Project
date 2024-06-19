@@ -40,7 +40,7 @@ LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
 
 # weights and Biases
-wandb.init(project="EaticxViT")
+wandb.init(entity="dragonintelligence", project="EaticxViT")
 
 # Training Function
 def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
