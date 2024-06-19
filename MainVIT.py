@@ -19,6 +19,7 @@ from torchvision.transforms import v2
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PATH: str = "dragonintelligence/CIFAKE-image-dataset"
+WANDB: bool = False
 CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
@@ -40,7 +41,8 @@ LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
 
 # weights and Biases
-wandb.init(entity="dragonintelligence", project="EaticxViT")
+if WANDB:
+    wandb.init(entity="dragonintelligence", project="EaticxViT")
 
 # Training Function
 def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
@@ -52,8 +54,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     """
 
     optimizer = optim.Adam(lr=lr, params=net.parameters())
-    if name == "ViT":
-        scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
+    scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
@@ -69,18 +70,18 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
             loss.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
-            if name == "ViT":
-                scheduler.step()
+            scheduler.step()
             
             # Weights and Biases Log
-            wandb.log(
-                {
-                    "Training Loss": loss.item(),
-                    "Learning Rate": optimizer.param_groups[0]["lr"],
-                    "epoch": epoch,
-                    "grad_norm": grad_norm
-                }
-            )
+            if WANDB:
+                wandb.log(
+                    {
+                        "Training Loss": loss.item(),
+                        "Learning Rate": optimizer.param_groups[0]["lr"],
+                        "epoch": epoch,
+                        "grad_norm": grad_norm
+                    }
+                )
 
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
                 # Calculating & printing
@@ -92,17 +93,14 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                 running_loss = 0.0
                 
                 # Weights & Biases log
-                wandb.log(
-                    {
-                        "Validation Loss": vloss,
-                        "Validation Accuracy": accuracy
-                    }
-                )
+                if WANDB:
+                    wandb.log(
+                        {
+                            "Validation Loss": vloss,
+                            "Validation Accuracy": accuracy
+                        }
+                    )
         
-        # elif name == "Perceiver":
-        #     if epoch in [84, 102, 114]:
-        #         for g in optimizer.param_groups:
-        #             g['lr'] /= 10  
     print(f'Finished Training the {name}.')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
