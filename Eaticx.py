@@ -120,10 +120,10 @@ class TransformerBlock(nn.Module):
         super().__init__()
 
         # Layers
-        self.attention = SelfAttention(heads, embedding_size)
+        self.self_attention = SelfAttention(heads, embedding_size)
         self.norm1 = nn.LayerNorm(embedding_size)
         self.norm2 = nn.LayerNorm(embedding_size)
-        self.feedforward = nn.Sequential(
+        self.mlp = nn.Sequential(
             nn.Linear(embedding_size, ff * embedding_size),
             nn.GELU(),
             nn.Linear(ff * embedding_size, embedding_size)
@@ -142,13 +142,13 @@ class TransformerBlock(nn.Module):
         Parameter: batch of dimension (nr_sequences, nr_batches, embedding_size)
         Returns: result of transformer block (same dimensionality)
         """
-        batch = batch + self.attention(self.norm1(batch))
-        batch = batch + self.feedforward(self.norm2(batch))
-        return batch
+        output = batch + self.self_attention(self.norm1(batch))
+        output = output + self.mlp(self.norm2(output))
+        return output
 
 # Perceiver Block (1 cross attention & 1 self attention)
 class PerceiverBlock(nn.Module):
-    def __init__(self, heads: int, embedding: int) -> None:
+    def __init__(self, attention_heads: int, embedding_size: int, depth: int) -> None:
         """
         Initializing Transformer Block object.
         Parameters: number of heads, embedding size (= 2 * input channels)
@@ -158,18 +158,17 @@ class PerceiverBlock(nn.Module):
         super().__init__()
 
         # Layers
-        self.norm1 = nn.LayerNorm(embedding)
-        self.norm2 = nn.LayerNorm(embedding)
-        self.norm3 = nn.LayerNorm(embedding)
-        self.norm4 = nn.LayerNorm(embedding)
-        self.cross = CrossAttention(embedding)
-        self.self = SelfAttention(heads, embedding)
-        self.linear1 = nn.Linear(embedding, embedding)
-        self.linear2 = nn.Linear(embedding, embedding)
-        self.feedforward = nn.Sequential(
-            nn.Linear(embedding, embedding),
+        self.norm1 = nn.LayerNorm(embedding_size)
+        self.norm2 = nn.LayerNorm(embedding_size)
+        self.norm3 = nn.LayerNorm(embedding_size)
+        self.cross_attention = CrossAttention(embedding_size)
+        self.latent_transformer = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, 1) for block in range(depth)])
+        self.linear1 = nn.Linear(embedding_size, embedding_size)
+        self.linear2 = nn.Linear(embedding_size, embedding_size)
+        self.mlp = nn.Sequential(
+            nn.Linear(embedding_size, embedding_size),
             nn.GELU(),
-            nn.Linear(embedding, embedding)
+            nn.Linear(embedding_size, embedding_size)
         )
 
     def forward(self, inputs: tuple):
@@ -188,9 +187,9 @@ class PerceiverBlock(nn.Module):
         batch, latent = inputs
         output =  self.cross(self.norm1(batch), latent)
         output = self.linear1(output)
-        output = output + self.self(self.norm3(output))
+        output = output + self.latent_transformer(self.norm2(output))
         output = self.linear2(output)
-        output = output + self.feedforward(self.norm4(output))
+        output = output + self.mlp(self.norm3(output))
         return output
 
 
@@ -207,14 +206,12 @@ class Perceiver(nn.Module):
 
         # Parameters
         self.device = device
-        self.depth = depth
 
         # Layers
         self.expand_channels = nn.Conv1d(channels, embedding_size, 1)
         self.position_embeddings = nn.Embedding(image_size ** 2, embedding_size)
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
-        self.perceiver_block1 = PerceiverBlock(attention_heads, 2 * embedding_size)
-        #self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
+        self.perceiver_block = PerceiverBlock(attention_heads, 2 * embedding_size, depth)
         self.classes = nn.Linear(2 * embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
@@ -227,11 +224,10 @@ class Perceiver(nn.Module):
         - Apply a global average operation before applying the last layer
         Returns: output of transformer network
         """
-        b, c, h, w = batch.size()
+        b, c, h, w = batch.size() # b = nr images, c = nr channels, h = height, w = width
         batch = self.expand_channels(batch.view(b, c, h * w))
         batch = torch.permute(batch, (0, 2, 1))
-        b, i, e = batch.size()
-        print(b,i,e)
+        b, i, e = batch.size() # b is the same, i = h * w, e = expanded channels
         pos_emb = self.position_embeddings(torch.arange(i, device=self.device))[None, :, :].expand(b, i, e)
         batch = torch.cat((batch, pos_emb), dim=2)
         batch = self.perceiver_block1((batch, self.latents))
