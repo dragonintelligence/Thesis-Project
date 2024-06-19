@@ -30,13 +30,12 @@ VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
 PER_LAT: int = 64 # same as EMB
-PER_HEADS: int = 8 # from paper Perceiver
+PER_HEADS: int = 8
 PER_DEPTH: int = 2 # test
-PER_LT_DEPTH: int = 4 # from paper Perceiver
+PER_LT_DEPTH: int = 4
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 7
-VIT_LR: float = 0.0003 # from paper VIT
-PER_LR: float = 0.0003 # ?
+NR_EPOCHS: int = 10
+LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
@@ -111,12 +110,12 @@ def experiment(model: str, dataloaders: tuple) -> None:
     if model == "ViT":
         desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             PATCH_SIZE, EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, VIT_LR, \
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
     elif model == "Perceiver":
         desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
             EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LT_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, PER_LR, \
+        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
             GRADIENT_CLIP, VAL_TIMES, DEVICE)
 
     print()

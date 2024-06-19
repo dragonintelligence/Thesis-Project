@@ -291,7 +291,7 @@ class VisionTransformer(nn.Module):
         x, y, z = patch_emb.size()
         pos_emb = self.position_embeddings(torch.arange(y, device=self.device))[None, :, :].expand(x, y, z)
         batch = self.unify_embeddings(torch.cat((patch_emb, pos_emb), dim=2).view(-1, 2 * z)).view(x, y, z)
-        output = self.transformer_blocks(output)
+        output = self.transformer_blocks(batch)
         output = torch.mean(output, dim=1)
         output = self.classes(output)
         return output

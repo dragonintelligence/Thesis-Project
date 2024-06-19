@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver with 2 blocks instead of 1"
+echo "Perceiver - latent transformer depth 4"
 python /var/scratch/mdr317/thesis/MainPer.py
