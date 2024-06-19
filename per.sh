@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver mini changes please work"
+echo "Perceiver change from yesterday that I couldn't test"
 python /var/scratch/mdr317/thesis/MainPer.py

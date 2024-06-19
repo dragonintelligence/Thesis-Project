@@ -215,7 +215,7 @@ class Perceiver(nn.Module):
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
         self.perceiver_block1 = PerceiverBlock(attention_heads, 2 * embedding_size)
         #self.perceiver_block2 = PerceiverBlock(attention_heads, 2 * channels)
-        self.classes = nn.Linear(2 * channels, nr_classes)
+        self.classes = nn.Linear(2 * embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
         """
@@ -230,7 +230,9 @@ class Perceiver(nn.Module):
         b, c, h, w = batch.size()
         batch = self.expand_channels(batch.view(b, c, h * w))
         batch = torch.permute(batch, (0, 2, 1))
-        pos_emb = self.position_embeddings(torch.arange(h*w, device=self.device))[None, :, :].expand(b, h*w, c)
+        b, i, e = batch.size()
+        print(b,i,e)
+        pos_emb = self.position_embeddings(torch.arange(i, device=self.device))[None, :, :].expand(b, i, e)
         batch = torch.cat((batch, pos_emb), dim=2)
         batch = self.perceiver_block1((batch, self.latents))
         batch = torch.mean(batch, dim=1)
