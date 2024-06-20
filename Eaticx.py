@@ -202,7 +202,7 @@ class PerceiverBlock(nn.Module):
 class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
         embedding_size: int, latent_size: int, attention_heads: int, perceiver_depth: int, 
-        transformer_depth: int, dropour: float, nr_classes: int) -> None:
+        transformer_depth: int, nr_classes: int) -> None:
 
         # Initialization
         super().__init__()
@@ -214,7 +214,7 @@ class Perceiver(nn.Module):
         self.expand_channels = nn.Conv1d(channels, embedding_size, 1)
         self.position_embeddings = nn.Embedding(image_size ** 2, embedding_size)
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
-        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, 2 * embedding_size, transformer_depth, dropout) for block in range(perceiver_depth)])
+        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, 2 * embedding_size, transformer_depth) for block in range(perceiver_depth)])
         self.classes = nn.Linear(2 * embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
