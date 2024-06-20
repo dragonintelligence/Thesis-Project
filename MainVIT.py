@@ -36,7 +36,7 @@ PER_HEADS: int = 8
 PER_DEPTH: int = 2 # test
 PER_LT_DEPTH: int = 4
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 15
+NR_EPOCHS: int = 7
 LR: float = 0.0003 # from paper VIT
 CRITERION = nn.CrossEntropyLoss()
 

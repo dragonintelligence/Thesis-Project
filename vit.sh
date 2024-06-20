@@ -11,6 +11,6 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "VIT 15 epochs (removed wandb)"
+echo "VIT 7 epochs again"
 wandb login 53a0710ff054ea7108a9fc4bb93dff685e5eb957
 python /var/scratch/mdr317/thesis/MainVIT.py

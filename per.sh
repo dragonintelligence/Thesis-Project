@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver 15 epochs (removed wandb) and One Cycle LR scheduler"
+echo "Perceiver 7 epochs 4 perceiver blocks"
 python /var/scratch/mdr317/thesis/MainPer.py
