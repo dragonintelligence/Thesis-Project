@@ -110,7 +110,7 @@ class SelfAttention(nn.Module):
 
 # Transformer Block
 class TransformerBlock(nn.Module):
-    def __init__(self, heads: int, embedding_size: int, ff: int) -> None:
+    def __init__(self, heads: int, embedding_size: int, ff: int, dropout: float) -> None:
         """
         Initializing Transformer Block object.
         Parameters: number of heads, embedding size, feedforward constant
@@ -128,6 +128,7 @@ class TransformerBlock(nn.Module):
             nn.GELU(),
             nn.Linear(ff * embedding_size, embedding_size)
         )
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, batch):
         """
@@ -143,7 +144,9 @@ class TransformerBlock(nn.Module):
         Returns: result of transformer block (same dimensionality)
         """
         output = batch + self.self_attention(self.norm1(batch))
+        output = self.dropout(output)
         output = output + self.mlp(self.norm2(output))
+        output = self.dropout(output)
         return output
 
 # Perceiver Block (1 cross attention & 1 self attention)
@@ -162,7 +165,7 @@ class PerceiverBlock(nn.Module):
         self.norm2 = nn.LayerNorm(embedding_size)
         self.norm3 = nn.LayerNorm(embedding_size)
         self.cross_attention = CrossAttention(embedding_size)
-        self.latent_transformer = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, 1) for block in range(depth)])
+        self.latent_transformer = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, 1, 0) for block in range(depth)])
         self.linear1 = nn.Linear(embedding_size, embedding_size)
         self.linear2 = nn.Linear(embedding_size, embedding_size)
         self.mlp = nn.Sequential(
@@ -199,7 +202,7 @@ class PerceiverBlock(nn.Module):
 class Perceiver(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
         embedding_size: int, latent_size: int, attention_heads: int, perceiver_depth: int, 
-        transformer_depth: int, nr_classes: int) -> None:
+        transformer_depth: int, dropour: float, nr_classes: int) -> None:
 
         # Initialization
         super().__init__()
@@ -211,7 +214,7 @@ class Perceiver(nn.Module):
         self.expand_channels = nn.Conv1d(channels, embedding_size, 1)
         self.position_embeddings = nn.Embedding(image_size ** 2, embedding_size)
         self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
-        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, 2 * embedding_size, transformer_depth) for block in range(perceiver_depth)])
+        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, 2 * embedding_size, transformer_depth, dropout) for block in range(perceiver_depth)])
         self.classes = nn.Linear(2 * embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
@@ -240,7 +243,7 @@ class Perceiver(nn.Module):
 class VisionTransformer(nn.Module):
     def __init__(self, device, channels: int, image_size: int, batch_size: int,
         patch_size: int, embedding_size: int, attention_heads: int, ff: int,
-        depth: int, nr_classes: int) -> None:
+        depth: int, dropout: float, nr_classes: int) -> None:
         """
         Function that initializes the Transformer class.
         Parameters: 
@@ -273,7 +276,7 @@ class VisionTransformer(nn.Module):
         self.patch_embeddings = nn.Linear(channels * (patch_size ** 2), embedding_size)
         self.position_embeddings = nn.Embedding((image_size // patch_size) ** 2, embedding_size)
         self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
-        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff) for block in range(depth)])
+        self.transformer_blocks = nn.Sequential(*[TransformerBlock(attention_heads, embedding_size, ff, dropout) for block in range(depth)])
         self.classes = nn.Linear(embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
