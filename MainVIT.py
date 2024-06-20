@@ -41,10 +41,6 @@ NR_EPOCHS: int = 5
 LR: float = 0.0003 # from paper VIT for global average ViT
 CRITERION = nn.CrossEntropyLoss()
 
-# weights and Biases
-if WANDB:
-    wandb.init(entity="dragonintelligence", project="EaticxViT")
-
 # Training Function
 def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
     """
@@ -86,7 +82,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
 
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
                 # Calculating & printing
-                accuracy, vloss = accuracy_test(v, net, criterion, device)
+                accuracy, vloss = evaluation(v, net, criterion, "val", device)
                 print(f'Epoch {epoch + 1}:')
                 print(f'- Training running loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
@@ -107,8 +103,9 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     torch.save(net.state_dict(), PATH)
 
 # Test Accuracy Function
-def accuracy_test(dataloader, net, criterion, device: str) -> tuple:
+def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:
     net.eval()
+    TP, TN, FP, FN = 0
     correct: int = 0
     total: int = 0
     loss: float = 0.0
@@ -119,14 +116,30 @@ def accuracy_test(dataloader, net, criterion, device: str) -> tuple:
             _, predicted = torch.max(outputs.data, dim=1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            if type == "test":
+                TP += ((predicted == 1) & (labels == 1)).sum().item()
+                TN += ((predicted == 0) & (labels == 0)).sum().item()
+                FP += ((predicted == 1) & (labels == 0)).sum().item()
+                FN += ((predicted == 0) & (labels == 1)).sum().item()
             l = criterion(outputs, labels)
             loss += l.item() * inputs.size(0)
 
-    accuracy: float = 100 * correct / total
+    accuracy: float = correct / total
     loss /= total
-    return accuracy, loss
+    if type == "test":
+        precision: float = TP / (TP + FP)
+        recall: float = TP / (TP + FN)
+        f1: float = (2 * precision * recall) / (precision + recall)
+        return accuracy, precision, recall, f1, loss
+    else:
+        return accuracy, loss
 
 def experiment(model: str, dataloaders: tuple) -> None:
+    # weights and Biases
+    if WANDB:
+        wandb.init(entity="dragonintelligence", project=f"Eaticx{model}")
+    
+    # Dataloaders
     tr, val, te = dataloaders
 
     #  Training Loop
@@ -144,11 +157,15 @@ def experiment(model: str, dataloaders: tuple) -> None:
     print()
     
     # Test Accuracy 
+    print("Test Set Evaluation:")
     path: str = f'./eaticx-{model}.pth'
     desired_net.load_state_dict(torch.load(path))
-    tacc, tloss = accuracy_test(te, desired_net, CRITERION, DEVICE)
-    print(f"Test loss: {tloss:.3f}")
-    print(f"Test accuracy: {tacc:.3f} %")
+    tacc, tprec, trec, tf1, tloss = evaluation(te, desired_net, CRITERION, "test", DEVICE)
+    print(f"- Test loss: {tloss:.3f}")
+    print(f"- Test accuracy: {tacc:.3f} %")
+    print(f"- Test precision: {tprec:.3f} %")
+    print(f"- Test recall: {trec:.3f} %")
+    print(f"- Test F1 score: {tf1:.3f} %")
 
 # Transforming images within a batch
 def batch_transform(batch):
@@ -157,7 +174,6 @@ def batch_transform(batch):
     batch["img"] = [main_transform(x.convert("RGB")) for x in batch["image"]]
     del batch["image"]
     return batch
-
 
 # Main
 
