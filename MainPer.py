@@ -78,7 +78,7 @@ if WANDB:
 #             # Test Accuracy 
 #             print("Test Set Evaluation:")
 #             path: str = './eaticx-ViT.pth'
-#             desired_net.load_state_dict(torch.load(path))
+#             net.load_state_dict(torch.load(path))
 #             tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
 #             print(f"- Test loss: {tloss:.3f}")
 #             print(f"- Test accuracy: {tacc:.3f} %")
@@ -120,7 +120,7 @@ for pdepth in PER_DEPTH:
                 # Test Accuracy 
                 print("Test Set Evaluation:")
                 path: str = './eaticx-Perceiver.pth'
-                desired_net.load_state_dict(torch.load(path))
+                net.load_state_dict(torch.load(path))
                 tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
                 print(f"- Test loss: {tloss:.3f}")
                 print(f"- Test accuracy: {tacc:.3f} %")
