@@ -73,13 +73,13 @@ for depth in VIT_DEPTH:
             net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                 PATCH_SIZE, emb, heads, VIT_FF, depth, VIT_DROPOUT, NR_CLASSES)\
                     .to(DEVICE)
-            Experiments.training_loop(net, model, tr, val, NR_EPOCHS, \
+            Experiments.training_loop(net, "ViT", tr, val, NR_EPOCHS, \
                 CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
             # Test Accuracy 
             print("Test Set Evaluation:")
             path: str = f'./eaticx-{model}.pth'
             desired_net.load_state_dict(torch.load(path))
-            tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, desired_net, CRITERION, "test", DEVICE)
+            tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, net, CRITERION, "test", DEVICE)
             print(f"- Test loss: {tloss:.3f}")
             print(f"- Test accuracy: {tacc:.3f} %")
             print(f"- Test precision: {tprec:.3f} %")
@@ -115,13 +115,13 @@ print()
 #                     print()
 #                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
 #                         emb, lat, heads, pdepth, tepth, NR_CLASSES).to(DEVICE)
-#                     Experiments.training_loop(net, model, tr, val, NR_EPOCHS, \
+#                     Experiments.training_loop(net, "Perceiver", tr, val, NR_EPOCHS, \
 #                         CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
 #                     # Test Accuracy 
 #                     print("Test Set Evaluation:")
 #                     path: str = f'./eaticx-{model}.pth'
 #                     desired_net.load_state_dict(torch.load(path))
-#                     tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, desired_net, CRITERION, "test", DEVICE)
+#                     tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, net, CRITERION, "test", DEVICE)
 #                     print(f"- Test loss: {tloss:.3f}")
 #                     print(f"- Test accuracy: {tacc:.3f} %")
 #                     print(f"- Test precision: {tprec:.3f} %")
