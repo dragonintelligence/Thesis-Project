@@ -11,5 +11,6 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver 4 3 12 latent size 200"
-python /var/scratch/mdr317/thesis/MainPer.py
+echo "Perceiver comparing different arhitecture parameters"
+wandb login 53a0710ff054ea7108a9fc4bb93dff685e5eb957
+python /var/scratch/mdr317/thesis/Main.py
