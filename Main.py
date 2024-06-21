@@ -73,7 +73,7 @@ for depth in VIT_DEPTH:
             net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                 PATCH_SIZE, emb, heads, VIT_FF, depth, VIT_DROPOUT, NR_CLASSES)\
                     .to(DEVICE)
-            Experiments.training_loop(desired_net, model, tr, val, NR_EPOCHS, \
+            Experiments.training_loop(net, model, tr, val, NR_EPOCHS, \
                 CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
             # Test Accuracy 
             print("Test Set Evaluation:")
@@ -115,7 +115,7 @@ print()
 #                     print()
 #                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
 #                         emb, lat, heads, pdepth, tepth, NR_CLASSES).to(DEVICE)
-#                     Experiments.training_loop(desired_net, model, tr, val, NR_EPOCHS, \
+#                     Experiments.training_loop(net, model, tr, val, NR_EPOCHS, \
 #                         CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
 #                     # Test Accuracy 
 #                     print("Test Set Evaluation:")
