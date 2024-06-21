@@ -105,7 +105,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
 # Test Accuracy Function
 def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:
     net.eval()
-    TP, TN, FP, FN = 0
+    TP, TN, FP, FN = (0,0,0,0)
     correct: int = 0
     total: int = 0
     loss: float = 0.0

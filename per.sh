@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver 7 epochs 4 perceiver blocks"
+echo "Perceiver 4 3 12 latent size 200"
 python /var/scratch/mdr317/thesis/MainPer.py

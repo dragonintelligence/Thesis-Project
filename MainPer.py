@@ -32,10 +32,10 @@ VIT_HEADS: int = 12 # from paper ViT-Base
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DEPTH: int = 12 # from paper ViT-Base
 VIT_DROPOUT: float = 0.2 # from paper VIT
-PER_LAT: int = 64 # same as EMB
-PER_HEADS: int = 8
-PER_DEPTH: int = 2 # test
-PER_LT_DEPTH: int = 4
+PER_LAT: int = 200
+PER_HEADS: int = 12
+PER_DEPTH: int = 4
+PER_LT_DEPTH: int = 3
 NR_CLASSES: int = 2
 NR_EPOCHS: int = 5
 LR: float = 0.0003 # from paper VIT for global average ViT
@@ -86,7 +86,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                 print(f'Epoch {epoch + 1}:')
                 print(f'- Training running loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
-                print(f"- Validation accuracy: {accuracy:.3f} %")
+                print(f"- Validation accuracy: {accuracy:.3f}")
                 running_loss = 0.0
                 
                 # Weights & Biases log
@@ -105,7 +105,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
 # Test Accuracy Function
 def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:
     net.eval()
-    TP, TN, FP, FN = 0
+    TP, TN, FP, FN = (0,0,0,0)
     correct: int = 0
     total: int = 0
     loss: float = 0.0
@@ -162,10 +162,10 @@ def experiment(model: str, dataloaders: tuple) -> None:
     desired_net.load_state_dict(torch.load(path))
     tacc, tprec, trec, tf1, tloss = evaluation(te, desired_net, CRITERION, "test", DEVICE)
     print(f"- Test loss: {tloss:.3f}")
-    print(f"- Test accuracy: {tacc:.3f} %")
-    print(f"- Test precision: {tprec:.3f} %")
-    print(f"- Test recall: {trec:.3f} %")
-    print(f"- Test F1 score: {tf1:.3f} %")
+    print(f"- Test accuracy: {tacc:.3f} ")
+    print(f"- Test precision: {tprec:.3f} ")
+    print(f"- Test recall: {trec:.3f} ")
+    print(f"- Test F1 score: {tf1:.3f} ")
 
 # Transforming images within a batch
 def batch_transform(batch):

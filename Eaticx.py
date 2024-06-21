@@ -188,7 +188,7 @@ class PerceiverBlock(nn.Module):
         Returns: result of transformer block (same dimensionality)
         """
         batch, latent = inputs
-        output =  self.cross_attention(self.norm1(batch), latent)
+        output = latent + self.cross_attention(self.norm1(batch), latent)
         output = self.linear1(output)
         output = output + self.latent_transformer(self.norm2(output))
         output = self.linear2(output)
@@ -213,9 +213,10 @@ class Perceiver(nn.Module):
         # Layers
         self.expand_channels = nn.Conv1d(channels, embedding_size, 1)
         self.position_embeddings = nn.Embedding(image_size ** 2, embedding_size)
-        self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size * 2))
-        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, 2 * embedding_size, transformer_depth) for block in range(perceiver_depth)])
-        self.classes = nn.Linear(2 * embedding_size, nr_classes)
+        self.unify_embeddings = nn.Linear(2 * embedding_size, embedding_size)
+        self.latents = nn.Parameter(torch.randn(batch_size, latent_size, embedding_size))
+        self.perceiver_blocks = nn.Sequential(*[PerceiverBlock(attention_heads, embedding_size, transformer_depth) for block in range(perceiver_depth)])
+        self.classes = nn.Linear(embedding_size, nr_classes)
 
     def forward(self, batch: list) -> list:
         """
@@ -232,7 +233,7 @@ class Perceiver(nn.Module):
         batch = torch.permute(batch, (0, 2, 1))
         b, i, e = batch.size() # b is the same, i = h * w, e = expanded channels
         pos_emb = self.position_embeddings(torch.arange(i, device=self.device))[None, :, :].expand(b, i, e)
-        batch = torch.cat((batch, pos_emb), dim=2)
+        batch = self.unify_embeddings(torch.cat((batch, pos_emb), dim=2))
         batch, output = self.perceiver_blocks((batch, self.latents))
         output = torch.mean(output, dim=1)
         output = self.classes(output)
