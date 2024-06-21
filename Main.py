@@ -19,24 +19,25 @@ from torchvision.transforms import v2
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PATH: str = "dragonintelligence/CIFAKE-image-dataset"
+WANDB: bool = False
 CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 256
-VAL_TIMES: int = 2
+VAL_TIMES: int = 5
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
-EMB: list = [64, 128] # options for experiments
-VIT_HEADS: int = [8, 12, 16]
+EMB: list = [64, 128]
+VIT_HEADS: list = [8, 12, 16]
 VIT_FF: int = 4 # from paper ViT-Base
-VIT_DEPTH: int = [8, 12, 24]
-PER_LAT: int = [64, 128]
-PER_HEADS: int = [8, 12]
-PER_DEPTH: list = [2, 3, 4]
-PER_LT_DEPTH: int = [12 // d for d in PER_DEPTH]
+VIT_DEPTH: list = [8, 12, 24]
+VIT_DROPOUT: float = 0.2 # from paper VIT
+PER_LAT: list = [64, 128]
+PER_HEADS: list = [8, 12, 16]
+PER_DEPTH: list = [2, 3, 4, 6]
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 10
-LR: float = 0.0003 # from paper VIT
+NR_EPOCHS: int = 5
+LR: float = 0.0003 # from paper VIT for global average ViT
 CRITERION = nn.CrossEntropyLoss()
 
 # Data Preprocessing
@@ -75,18 +76,18 @@ for depth in VIT_DEPTH:
             Experiments.training_loop(desired_net, model, tr, val, NR_EPOCHS, \
                 CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
             # Test Accuracy 
-        print("Test Set Evaluation:")
-        path: str = f'./eaticx-{model}.pth'
-        desired_net.load_state_dict(torch.load(path))
-        tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, desired_net, CRITERION, "test", DEVICE)
-        print(f"- Test loss: {tloss:.3f}")
-        print(f"- Test accuracy: {tacc:.3f} %")
-        print(f"- Test precision: {tprec:.3f} %")
-        print(f"- Test recall: {trec:.3f} %")
-        print(f"- Test F1 score: {tf1:.3f} %")
-        print()
-        accuracy[f"{depth} {heads} {emb}"] = tacc
-        f1_score[f"{depth} {heads} {emb}"] = tf1
+            print("Test Set Evaluation:")
+            path: str = f'./eaticx-{model}.pth'
+            desired_net.load_state_dict(torch.load(path))
+            tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, desired_net, CRITERION, "test", DEVICE)
+            print(f"- Test loss: {tloss:.3f}")
+            print(f"- Test accuracy: {tacc:.3f} %")
+            print(f"- Test precision: {tprec:.3f} %")
+            print(f"- Test recall: {trec:.3f} %")
+            print(f"- Test F1 score: {tf1:.3f} %")
+            print()
+            accuracy[f"{depth} {heads} {emb}"] = tacc
+            f1_score[f"{depth} {heads} {emb}"] = tf1
 
 
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1]))
@@ -95,3 +96,47 @@ print("ViT with best test accuracy: ", accuracy.keys()[-1])
 print(f"Accuracy: {accuracy.values()[-1] * 100:.3f} %")
 print("ViT with best test F1-score: ", f1_score.keys()[-1])
 print(f"Accuracy: {f1_score.values()[-1]:.3f}")
+
+print()
+print()
+
+# # Perceiver Experiments
+# print("Perceiver Experiments")
+# accuracy: dict = {}
+# f1_score: dict = {}
+# for pdepth in PER_DEPTH:
+#     for tdepth in PER_LT_DEPTH:
+#         for heads in VIT_HEADS:
+#             for emb in EMB:
+#                 for lat in PER_LAT:
+#                     print(f"{pdepth} perceiver blocks: each has {tdepth} cross attentions \
+#                     and {tdepth} blocks of {heads}-headed self attention, embedding \
+#                     size of {emb} and latent size of {lat}")
+#                     print()
+#                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+#                         emb, lat, heads, pdepth, tepth, NR_CLASSES).to(DEVICE)
+#                     Experiments.training_loop(desired_net, model, tr, val, NR_EPOCHS, \
+#                         CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+#                     # Test Accuracy 
+#                     print("Test Set Evaluation:")
+#                     path: str = f'./eaticx-{model}.pth'
+#                     desired_net.load_state_dict(torch.load(path))
+#                     tacc, tprec, trec, tf1, tloss = Experiments.evaluation(te, desired_net, CRITERION, "test", DEVICE)
+#                     print(f"- Test loss: {tloss:.3f}")
+#                     print(f"- Test accuracy: {tacc:.3f} %")
+#                     print(f"- Test precision: {tprec:.3f} %")
+#                     print(f"- Test recall: {trec:.3f} %")
+#                     print(f"- Test F1 score: {tf1:.3f} %")
+#                     print()
+#                     accuracy[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tacc
+#                     f1_score[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tf1
+
+# accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1]))
+# f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]))
+# print("Perceiver with best test accuracy: ", accuracy.keys()[-1])
+# print(f"Accuracy: {accuracy.values()[-1] * 100:.3f} %")
+# print("Perceiver with best test F1-score: ", f1_score.keys()[-1])
+# print(f"Accuracy: {f1_score.values()[-1]:.3f}")
+
+# print()
+# print()
