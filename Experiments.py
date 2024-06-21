@@ -16,30 +16,7 @@ from torch.utils.data import DataLoader, random_split
 from datasets import load_dataset
 from torchvision.transforms import v2
 
-# Constants
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PATH: str = "dragonintelligence/CIFAKE-image-dataset"
 WANDB: bool = False
-CHANNELS: int = 3
-IMG_SIZE: int = 32
-PATCH_SIZE: int = 4
-BATCH_SIZE: int = 256
-VAL_TIMES: int = 5
-SPLIT: int = 0.5
-GRADIENT_CLIP: int = 1
-EMB: int = 64 # next power of 2 after 48
-VIT_HEADS: int = 12 # from paper ViT-Base
-VIT_FF: int = 4 # from paper ViT-Base
-VIT_DEPTH: int = 12 # from paper ViT-Base
-VIT_DROPOUT: float = 0.2 # from paper VIT
-PER_LAT: int = 64 # same as EMB
-PER_HEADS: int = 8
-PER_DEPTH: int = 2 # test
-PER_LT_DEPTH: int = 4
-NR_CLASSES: int = 2
-NR_EPOCHS: int = 5
-LR: float = 0.0003 # from paper VIT for global average ViT
-CRITERION = nn.CrossEntropyLoss()
 
 # Training Function
 def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
@@ -133,60 +110,3 @@ def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:
         return accuracy, precision, recall, f1, loss
     else:
         return accuracy, loss
-
-def experiment(model: str, dataloaders: tuple) -> None:
-    # weights and Biases
-    if WANDB:
-        wandb.init(entity="dragonintelligence", project=f"Eaticx{model}")
-    
-    # Dataloaders
-    tr, val, te = dataloaders
-
-    #  Training Loop
-    if model == "ViT":
-        desired_net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, VIT_DROPOUT, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
-            GRADIENT_CLIP, VAL_TIMES, DEVICE)
-    elif model == "Perceiver":
-        desired_net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LT_DEPTH, NR_CLASSES).to(DEVICE)
-        training_loop(desired_net, model, tr, val, NR_EPOCHS, CRITERION, LR, \
-            GRADIENT_CLIP, VAL_TIMES, DEVICE)
-
-    print()
-    
-    # Test Accuracy 
-    print("Test Set Evaluation:")
-    path: str = f'./eaticx-{model}.pth'
-    desired_net.load_state_dict(torch.load(path))
-    tacc, tprec, trec, tf1, tloss = evaluation(te, desired_net, CRITERION, "test", DEVICE)
-    print(f"- Test loss: {tloss:.3f}")
-    print(f"- Test accuracy: {tacc:.3f} %")
-    print(f"- Test precision: {tprec:.3f} %")
-    print(f"- Test recall: {trec:.3f} %")
-    print(f"- Test F1 score: {tf1:.3f} %")
-
-# Transforming images within a batch
-def batch_transform(batch):
-    # turn the images into PyTorch tensors & normalize the images to [-1, 1] range
-    main_transform = v2.Compose([v2.ToTensor(), v2.Lambda(lambda tensor: (tensor * 2) - 1)])
-    batch["img"] = [main_transform(x.convert("RGB")) for x in batch["image"]]
-    del batch["image"]
-    return batch
-
-# Main
-
-# Data - Training = 100000, Val = 10000, Test = 10000
-train = load_dataset(PATH, split = "train").with_transform(batch_transform)
-train_dataloader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
-val_test_split = load_dataset(PATH, split = "test").train_test_split(test_size=SPLIT)
-val = val_test_split["train"].with_transform(batch_transform)
-val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
-test = val_test_split["test"].with_transform(batch_transform)
-test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
-
-# Run Experiments
-print("Vision Transformer Experiment")
-print()
-experiment("ViT", (train_dataloader, val_dataloader, test_dataloader))
