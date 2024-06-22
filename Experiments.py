@@ -63,7 +63,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                 print(f'Epoch {epoch + 1}:')
                 print(f'- Training running loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
-                print(f"- Validation accuracy: {accuracy:.3f} %")
+                print(f"- Validation accuracy: {accuracy:.3f}")
                 running_loss = 0.0
                 
                 # Weights & Biases log

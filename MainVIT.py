@@ -36,7 +36,7 @@ PER_LAT: list = [64, 128]
 PER_HEADS: list = [8, 12, 16]
 PER_DEPTH: list = [2, 3, 4, 6]
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 10
+NR_EPOCHS: int = 5
 LR: float = 0.0003 # from paper VIT for global average ViT
 CRITERION = nn.CrossEntropyLoss()
 
@@ -96,7 +96,7 @@ for depth in VIT_DEPTH:
 
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1]))
 f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]))
-print("ViT with best test accuracy: ", accuracy.keys()[-1])
+print("ViT with best test accuracy: ", list(accuracy.values())[-1])
 print(f"Accuracy: {list(accuracy.values())[-1] * 100:.3f} %")
-print("ViT with best test F1-score: ", f1_score.keys()[-1])
+print("ViT with best test F1-score: ", list(f1_score.values())[-1])
 print(f"F1 Score: {list(f1_score.values())[-1]:.3f}")
