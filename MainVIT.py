@@ -97,6 +97,6 @@ for depth in VIT_DEPTH:
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1]))
 f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]))
 print("ViT with best test accuracy: ", accuracy.keys()[-1])
-print(f"Accuracy: {accuracy.values()[-1] * 100:.3f} %")
+print(f"Accuracy: {list(accuracy.values())[-1] * 100:.3f} %")
 print("ViT with best test F1-score: ", f1_score.keys()[-1])
-print(f"F1 Score: {f1_score.values()[-1]:.3f}")
+print(f"F1 Score: {list(f1_score.values())[-1]:.3f}")

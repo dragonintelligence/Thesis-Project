@@ -24,7 +24,7 @@ CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 256
-VAL_TIMES: int = 5
+VAL_TIMES: int = 2
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
 EMB: list = [64, 128]
@@ -97,6 +97,6 @@ for pdepth in PER_DEPTH:
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1]))
 f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]))
 print("Perceiver with best test accuracy: ", accuracy.keys()[-1])
-print(f"Accuracy: {accuracy.values()[-1] * 100:.3f} %")
+print(f"Accuracy: {list(accuracy.values())[-1] * 100:.3f} %")
 print("Perceiver with best test F1-score: ", f1_score.keys()[-1])
-print(f"Accuracy: {f1_score.values()[-1]:.3f}")
+print(f"Accuracy: {list(f1_score.values())[-1]:.3f}")
