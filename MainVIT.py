@@ -91,6 +91,6 @@ for lr in [0.0001, 0.0003, 0.0006, 0.0008]:
 
 # Getting top 3
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1], reverse=True))
-f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]), reverse=True)
+f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1], reverse=True))
 for i in range(4):
     print(f"{i}) ViT - {list(f1_score.keys())[i]}: accuracy {accuracy[list(f1_score.keys())[i]] * 100 :.3f} % and F1 score {list(f1_score.values())[i] :.3f}")
