@@ -16,10 +16,8 @@ from torch.utils.data import DataLoader, random_split
 from datasets import load_dataset
 from torchvision.transforms import v2
 
-WANDB: bool = False
-
 # Training Function
-def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str) -> None:
+def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str, wb: bool) -> None:
     """
     Function that trains a chosen Neural Network.
     Parameters: Neural Network object, name for save file, training dataset,
@@ -47,7 +45,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
             scheduler.step()
             
             # Weights and Biases Log
-            if WANDB:
+            if wb:
                 wandb.log(
                     {
                         "Training Loss": loss.item(),
@@ -67,7 +65,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                 running_loss = 0.0
                 
                 # Weights & Biases log
-                if WANDB:
+                if wb:
                     wandb.log(
                         {
                             "Validation Loss": vloss,

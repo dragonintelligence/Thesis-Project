@@ -75,7 +75,7 @@ for pdepth in [2, 4]:
                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                         emb, lat, heads, pdepth, tdepth, NR_CLASSES).to(DEVICE)
                     Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
                     # Test Accuracy 
                     print("Test Set Evaluation:")
                     path: str = './eaticx-Perceiver.pth'
@@ -106,7 +106,7 @@ for pdepth in PER_DEPTH:
                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                         emb, lat, heads, pdepth, tdepth, NR_CLASSES).to(DEVICE)
                     Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
                     # Test Accuracy 
                     print("Test Set Evaluation:")
                     path: str = './eaticx-Perceiver.pth'
@@ -137,7 +137,7 @@ for pdepth in [2, 3, 4, 6, 8, 12]:
                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                         emb, lat, heads, pdepth, tdepth, NR_CLASSES).to(DEVICE)
                     Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
                     # Test Accuracy 
                     print("Test Set Evaluation:")
                     path: str = './eaticx-Perceiver.pth'
