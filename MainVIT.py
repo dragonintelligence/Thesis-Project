@@ -62,36 +62,37 @@ if WANDB:
 print("Vision Transformer Experiments")
 accuracy: dict = {}
 f1_score: dict = {}
-print(f"8 blocks of 16-headed self attention and 128 embedding size")
-for lr in [0.0003, 0.0006, 0.0008, 0.001, 0.003, 0.004]:
-    print(" - LR ", lr)
-    print()
-    try:
-        net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-            PATCH_SIZE, 128, 16, VIT_FF, 8, VIT_DROPOUT, NR_CLASSES)\
-                .to(DEVICE)
-        Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \
-            CRITERION, lr, GRADIENT_CLIP, VAL_TIMES, DEVICE)
-        # Test Accuracy 
-        print("Test Set Evaluation:")
-        path: str = './eaticx-ViT.pth'
-        net.load_state_dict(torch.load(path))
-        tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-        print(f"- Test loss: {tloss:.3f}")
-        print(f"- Test accuracy: {tacc:.3f}")
-        print(f"- Test precision: {tprec:.3f}")
-        print(f"- Test recall: {trec:.3f}")
-        print(f"- Test F1 score: {tf1:.3f}")
-        print()
-        accuracy[f"{lr}"] = tacc
-        f1_score[f"{lr}"] = tf1
-    except:
-        print("CUDA out of memory.")
-        print()
+for depth in VIT_DEPTH:
+    for heads in VIT_HEADS:
+        for emb in EMB:
+            print(f"{depth} blocks of {heads}-headed self attention and {emb} embedding size")
+            print()
+            try:
+                net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+                    PATCH_SIZE, emb, heads, VIT_FF, depth, VIT_DROPOUT, NR_CLASSES)\
+                        .to(DEVICE)
+                Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \
+                    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE)
+                # Test Accuracy 
+                print("Test Set Evaluation:")
+                path: str = './eaticx-ViT.pth'
+                net.load_state_dict(torch.load(path))
+                tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+                print(f"- Test loss: {tloss:.3f}")
+                print(f"- Test accuracy: {tacc:.3f}")
+                print(f"- Test precision: {tprec:.3f}")
+                print(f"- Test recall: {trec:.3f}")
+                print(f"- Test F1 score: {tf1:.3f}")
+                print()
+                accuracy[f"{depth} {heads} {emb}"] = tacc
+                f1_score[f"{depth} {heads} {emb}"] = tf1
+            except:
+                print("CUDA out of memory.")
+                print()
 
-# Getting top 3
+# Getting top 5
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1], reverse=True))
 f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]), reverse=True)
 print("Top 5 ViT configurations:")
-for i in range(3):
+for i in range(5):
     print(f"{i}) ViT - {list(f1_score.keys())[i]}: accuracy {accuracy[list(f1_score.keys())[i]] * 100 :.3f} % and F1 score {list(f1_score.values())[i] :.3f}")
