@@ -69,7 +69,7 @@ for pdepth in [2, 4]:
     for heads in PER_HEADS:
         for emb in EMB:
             for lat in PER_LAT:
-                print(f"{pdepth} perceiver blocks: each has {tdepth} cross attentions and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
+                print(f"{pdepth} perceiver blocks: each has 1 cross attention and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
                 print()
                 try:
                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
@@ -97,10 +97,10 @@ print("Phase 2: to compare to a 12-Self Attention VIT")
 
 for pdepth in PER_DEPTH:
     tdepth = 12 // pdepth
-    for heads in VIT_HEADS:
+    for heads in PER_HEADS:
         for emb in EMB:
             for lat in PER_LAT:
-                print(f"{pdepth} perceiver blocks: each has {tdepth} cross attentions and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
+                print(f"{pdepth} perceiver blocks: each has 1 cross attention and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
                 print()
                 try:
                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
@@ -128,10 +128,10 @@ print("Phase 3: to compare to a 24-Self Attention VIT")
 
 for pdepth in [2, 3, 4, 6, 8, 12]:
     tdepth = 24 // pdepth
-    for heads in VIT_HEADS:
+    for heads in PER_HEADS:
         for emb in EMB:
             for lat in PER_LAT:
-                print(f"{pdepth} perceiver blocks: each has {tdepth} cross attentions and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
+                print(f"{pdepth} perceiver blocks: each has 1 cross attention and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
                 print()
                 try:
                     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
