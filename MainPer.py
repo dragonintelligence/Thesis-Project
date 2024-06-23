@@ -66,7 +66,7 @@ print("Phase 1: to compare to a 8-Self Attention VIT")
 
 for pdepth in [2, 4]:
     tdepth = 8 // pdepth
-    for heads in VIT_HEADS:
+    for heads in PER_HEADS:
         for emb in EMB:
             for lat in PER_LAT:
                 print(f"{pdepth} perceiver blocks: each has {tdepth} cross attentions and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
