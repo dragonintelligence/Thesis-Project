@@ -92,7 +92,7 @@ for depth in VIT_DEPTH:
 
 # Getting top 5
 accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1], reverse=True))
-f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1]), reverse=True)
+f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1], reverse=True))
 print("Top 5 ViT configurations:")
 for i in range(5):
     print(f"{i}) ViT - {list(f1_score.keys())[i]}: accuracy {accuracy[list(f1_score.keys())[i]] * 100 :.3f} % and F1 score {list(f1_score.values())[i] :.3f}")

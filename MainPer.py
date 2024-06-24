@@ -32,7 +32,7 @@ PER_LAT: list = [64, 128]
 PER_HEADS: list = [8, 12, 16]
 PER_DEPTH: list = [2, 3, 4, 6]
 NR_CLASSES: int = 2
-NR_EPOCHS: int = 5
+NR_EPOCHS: int = 10 # first tried 5
 LR: float = 0.0006
 CRITERION = nn.CrossEntropyLoss()
 
