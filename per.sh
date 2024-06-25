@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver different configuration 10 epochs"
+echo "Best per 10 and 15 epochs instead of 5"
 python /var/scratch/mdr317/thesis/MainPer.py
