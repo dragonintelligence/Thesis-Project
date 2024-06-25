@@ -34,7 +34,7 @@ VIT_DEPTH: list = [8, 12, 24]
 VIT_DROPOUT: float = 0.2 # from paper VIT
 NR_CLASSES: int = 2
 NR_EPOCHS: int = 5
-LR: float = 0.0006
+LR: float = 0.0004
 CRITERION = nn.CrossEntropyLoss()
 
 # Data Preprocessing

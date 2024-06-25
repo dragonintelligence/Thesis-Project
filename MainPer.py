@@ -63,7 +63,7 @@ accuracy: dict = {}
 f1_score: dict = {}
 
 print("Phase 1: to compare to a 8-Self Attention VIT")
-
+print()
 for pdepth in [2, 4]:
     tdepth = 8 // pdepth
     for heads in PER_HEADS:
@@ -94,7 +94,7 @@ for pdepth in [2, 4]:
                     print()
 
 print("Phase 2: to compare to a 12-Self Attention VIT")
-
+print()
 for pdepth in PER_DEPTH:
     tdepth = 12 // pdepth
     for heads in PER_HEADS:
@@ -125,7 +125,7 @@ for pdepth in PER_DEPTH:
                     print()
 
 print("Phase 3: to compare to a 24-Self Attention VIT")
-
+print()
 for pdepth in [2, 3, 4, 6, 8, 12]:
     tdepth = 24 // pdepth
     for heads in PER_HEADS:
