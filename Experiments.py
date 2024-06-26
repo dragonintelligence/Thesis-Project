@@ -31,7 +31,6 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     if not wb:
         tloss_plot = []
         vloss_plot = []
-        vacc_plot = []
         lr_plot = []
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
@@ -60,7 +59,7 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                     }
                 )
             else:
-                loss_plot.append(loss.item())
+                tloss_plot.append(loss.item())
                 lr_plot.append(optimizer.param_groups[0]["lr"])
 
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
@@ -82,13 +81,12 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                     )
                 else:
                     vloss_plot.append(vloss)
-                    vacc_plot.append(accuracy)
         
     print(f'Finished Training the {name}.')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
     if not wb:
-        return loss_plot, lr_plot, vloss_plot, vacc_plot
+        return tloss_plot, lr_plot, vloss_plot
 
 # Evaluation metrics Function
 def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:

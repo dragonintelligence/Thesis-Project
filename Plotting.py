@@ -25,17 +25,11 @@ CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 256
-VAL_TIMES: int = 5
+VAL_TIMES: int = 2
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
-EMB: list = [64, 128]
-VIT_HEADS: list = [8, 12, 16]
 VIT_FF: int = 4 # from paper ViT-Base
-VIT_DEPTH: list = [8, 12, 24]
 VIT_DROPOUT: float = 0.2 # from paper VIT
-PER_LAT: list = [64, 128]
-PER_HEADS: list = [8, 12, 16]
-PER_DEPTH: list = [2, 3, 4, 6]
 NR_CLASSES: int = 2
 NR_EPOCHS: int = 5
 LR: float = 0.0003 # from paper VIT for global average ViT
@@ -85,11 +79,127 @@ print(f"- Test precision: {tprec:.3f}")
 print(f"- Test recall: {trec:.3f}")
 print(f"- Test F1 score: {tf1:.3f}")
 print()
-# Plots
-plt.plot(vectors[0], steps)
+# Plot 1
+plt.figure(1)
+plt.plot(vectors[0], steps, label="Training Loss")
+plt.plot(vectors[1], steps, label="Validation Loss")
+plt.legend(loc="upper left")
+plt.xlabel("Nr. training steps")
+plt.ylabel("Cross Entropy Loss")
 plt.show()
+plt.savefig("1 loss.png")
+# Plot 2
+plt.figure(2)
+plt.plot(vectors[2], steps)
+plt.xlabel("Nr. steps")
+plt.ylabel("Learning Rate")
+plt.show()
+plt.savefig("1 lr.png")
 
+## Per 5 epochs
+# Train
+print("Per 4 blocks 2 transformers 8 heads 128 emb & lat 5 epochs")
+print()
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+        128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
+vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
+# Test
+print("Test Set Evaluation:")
+path: str = './eaticx-ViT.pth'
+net.load_state_dict(torch.load(path))
+tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+print(f"- Test loss: {tloss:.3f}")
+print(f"- Test accuracy: {tacc:.3f}")
+print(f"- Test precision: {tprec:.3f}")
+print(f"- Test recall: {trec:.3f}")
+print(f"- Test F1 score: {tf1:.3f}")
+print()
+# Plot 1
+plt.figure(3)
+plt.plot(vectors[0], steps, label="Training Loss")
+plt.plot(vectors[1], steps, label="Validation Loss")
+plt.legend(loc="upper left")
+plt.xlabel("Nr. training steps")
+plt.ylabel("Cross Entropy Loss")
+plt.show()
+plt.savefig("2 loss.png")
+# Plot 2
+plt.figure(4)
+plt.plot(vectors[2], steps)
+plt.xlabel("Nr. steps")
+plt.ylabel("Learning Rate")
+plt.show()
+plt.savefig("2 lr.png")
 
-# Per 5 epochs
+## Per 10 epochs
+# Train
+print("Per 4 blocks 2 transformers 8 heads 128 emb & lat 10 epochs")
+print()
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+        128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
+vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, 2 * NR_EPOCHS, \
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
+# Test
+print("Test Set Evaluation:")
+path: str = './eaticx-ViT.pth'
+net.load_state_dict(torch.load(path))
+tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+print(f"- Test loss: {tloss:.3f}")
+print(f"- Test accuracy: {tacc:.3f}")
+print(f"- Test precision: {tprec:.3f}")
+print(f"- Test recall: {trec:.3f}")
+print(f"- Test F1 score: {tf1:.3f}")
+print()
+# Plot 1
+plt.figure(5)
+plt.plot(vectors[0], steps, label="Training Loss")
+plt.plot(vectors[1], steps, label="Validation Loss")
+plt.legend(loc="upper left")
+plt.xlabel("Nr. training steps")
+plt.ylabel("Cross Entropy Loss")
+plt.show()
+plt.savefig("3 loss.png")
+# Plot 2
+plt.figure(6)
+plt.plot(vectors[2], steps)
+plt.xlabel("Nr. steps")
+plt.ylabel("Learning Rate")
+plt.show()
+plt.savefig("3 lr.png")
 
-# Per 10 epochs
+## Per 2 10 epochs
+# Train
+print("Per 4 blocks 2 transformers 8 heads 128 emb & lat 10 epochs")
+print()
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+        64, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
+vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, 2 * NR_EPOCHS, \
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
+# Test
+print("Test Set Evaluation:")
+path: str = './eaticx-ViT.pth'
+net.load_state_dict(torch.load(path))
+tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+print(f"- Test loss: {tloss:.3f}")
+print(f"- Test accuracy: {tacc:.3f}")
+print(f"- Test precision: {tprec:.3f}")
+print(f"- Test recall: {trec:.3f}")
+print(f"- Test F1 score: {tf1:.3f}")
+print()
+# Plot 1
+plt.figure(7)
+plt.plot(vectors[0], steps, label="Training Loss")
+plt.plot(vectors[1], steps, label="Validation Loss")
+plt.legend(loc="upper left")
+plt.xlabel("Nr. training steps")
+plt.ylabel("Cross Entropy Loss")
+plt.show()
+plt.savefig("4 loss.png")
+# Plot 2
+plt.figure(8)
+plt.plot(vectors[2], steps)
+plt.xlabel("Nr. steps")
+plt.ylabel("Learning Rate")
+plt.show()
+plt.savefig("4 lr.png")

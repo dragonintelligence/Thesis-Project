@@ -59,12 +59,12 @@ if WANDB:
 
 
 print("Try only the best Perceiver from past experiment, now with 15 epochs")
-print("4 blocks of cross attention and 3 latent transformer block, 8 heads, emb = lat = 128")
+print("4 blocks of cross attention and 2 latent transformer block, 8 heads, emb = lat = 128")
 print("10 epochs")
 print()
 try:
     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-        128, 128, 8, 4, 3, NR_CLASSES).to(DEVICE)
+        128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
     Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, 10, \
         CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
     # Test Accuracy 
@@ -86,7 +86,7 @@ print("15 epochs")
 print()
 try:
     net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-        128, 128, 8, 4, 3, NR_CLASSES).to(DEVICE)
+        128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
     Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, 15, \
         CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
     # Test Accuracy 
