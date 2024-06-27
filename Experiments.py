@@ -59,18 +59,16 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                     }
                 )
             else:
-                tloss_plot.append(loss.item())
                 lr_plot.append(optimizer.param_groups[0]["lr"])
 
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
                 # Calculating & printing
                 accuracy, vloss = evaluation(v, net, criterion, "val", device)
                 print(f'Epoch {epoch + 1}:')
-                print(f'- Training running loss: {loss.item():.3f}')
+                print(f'- Training loss: {loss.item():.3f}')
                 print(f"- Validation loss: {vloss:.3f}")
                 print(f"- Validation accuracy: {accuracy:.3f}")
-                running_loss = 0.0
-                
+
                 # Weights & Biases log
                 if wb:
                     wandb.log(
@@ -80,13 +78,14 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                         }
                     )
                 else:
+                    tloss_plot.append(loss.item())
                     vloss_plot.append(vloss)
         
     print(f'Finished Training the {name}.')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
     if not wb:
-        return tloss_plot, lr_plot, vloss_plot
+        return tloss_plot, vloss_plot, lr_plot
 
 # Evaluation metrics Function
 def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:
