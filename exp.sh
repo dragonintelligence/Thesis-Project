@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "4 models with plots for loss & LR"
+echo "4 models with plots for loss & LR FOR LR 0.0006 AHH"
 python /var/scratch/mdr317/thesis/Plotting.py

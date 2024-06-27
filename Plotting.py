@@ -59,6 +59,8 @@ if WANDB:
 #A
 epochs: list = [i for i in range(NR_EPOCHS)]
 steps: list = [i for i in range(NR_EPOCHS * len(train_dataloader))]
+epochs2: list = [i for i in range(2 * NR_EPOCHS)]
+steps2: list = [i for i in range(2 * NR_EPOCHS * len(train_dataloader))]
 
 ## ViT
 # Train
@@ -154,7 +156,7 @@ print(f"- Test F1 score: {tf1:.3f}")
 print()
 # Plot 1
 plt.figure(5)
-plt.plot(epochs, vectors[0], label="Training Loss")
+plt.plot(epochs2, vectors[0], label="Training Loss")
 plt.plot(epochs, vectors[1], label="Validation Loss")
 plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
@@ -163,7 +165,7 @@ plt.show()
 plt.savefig("B3loss.png")
 # Plot 2
 plt.figure(6)
-plt.plot(steps, vectors[2])
+plt.plot(steps2, vectors[2])
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
@@ -190,8 +192,8 @@ print(f"- Test F1 score: {tf1:.3f}")
 print()
 # Plot 1
 plt.figure(7)
-plt.plot(epochs, vectors[0], label="Training Loss")
-plt.plot(epochs, vectors[1], label="Validation Loss")
+plt.plot(epochs2, vectors[0], label="Training Loss")
+plt.plot(epochs2, vectors[1], label="Validation Loss")
 plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
@@ -199,7 +201,7 @@ plt.show()
 plt.savefig("B4loss.png")
 # Plot 2
 plt.figure(8)
-plt.plot(steps, vectors[2])
+plt.plot(steps2, vectors[2])
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
