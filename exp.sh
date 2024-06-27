@@ -12,4 +12,4 @@ conda activate
 cd /var/scratch/mdr317/thesis
 
 echo "4 models with plots for loss & LR"
-python /var/scratch/mdr317/thesis/MainPer.py
+python /var/scratch/mdr317/thesis/Plotting.py

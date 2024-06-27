@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "VIT different configurations 0.0004 LR"
-python /var/scratch/mdr317/thesis/MainVIT.py
+echo "VIT 1 single run with matplotlib plot"
+python /var/scratch/mdr317/thesis/Plotting.py
