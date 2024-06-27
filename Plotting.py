@@ -25,7 +25,7 @@ CHANNELS: int = 3
 IMG_SIZE: int = 32
 PATCH_SIZE: int = 4
 BATCH_SIZE: int = 256
-VAL_TIMES: int = 2
+VAL_TIMES: int = 1
 SPLIT: int = 0.5
 GRADIENT_CLIP: int = 1
 VIT_FF: int = 4 # from paper ViT-Base
@@ -57,7 +57,7 @@ if WANDB:
     wandb.init(entity="dragonintelligence", project=f"Eaticx{model}")
 
 #A
-steps: list = [i for i in range(NR_EPOCHS * len(train_dataloader))]
+steps: list = [i for i in range(NR_EPOCHS)]
 
 ## ViT
 # Train
@@ -87,14 +87,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("1 loss.png")
+plt.savefig("1loss.png")
 # Plot 2
 plt.figure(2)
 plt.plot(vectors[2], steps)
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("1 lr.png")
+plt.savefig("1lr.png")
 
 ## Per 5 epochs
 # Train
@@ -123,14 +123,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("2 loss.png")
+plt.savefig("2loss.png")
 # Plot 2
 plt.figure(4)
 plt.plot(vectors[2], steps)
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("2 lr.png")
+plt.savefig("2lr.png")
 
 ## Per 10 epochs
 # Train
@@ -159,14 +159,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("3 loss.png")
+plt.savefig("3loss.png")
 # Plot 2
 plt.figure(6)
 plt.plot(vectors[2], steps)
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("3 lr.png")
+plt.savefig("3lr.png")
 
 ## Per 2 10 epochs
 # Train
@@ -195,11 +195,11 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("4 loss.png")
+plt.savefig("4loss.png")
 # Plot 2
 plt.figure(8)
 plt.plot(vectors[2], steps)
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("4 lr.png")
+plt.savefig("4lr.png")
