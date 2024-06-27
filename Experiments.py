@@ -29,9 +29,9 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
     if not wb:
-        tloss_plot = []
-        vloss_plot = []
-        lr_plot = []
+        tloss_plot: list = []
+        vloss_plot: list = []
+        vacc_plot: list = []
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
@@ -58,8 +58,6 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                         "grad_norm": grad_norm
                     }
                 )
-            else:
-                lr_plot.append(optimizer.param_groups[0]["lr"])
 
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
                 # Calculating & printing
@@ -80,12 +78,13 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
                 else:
                     tloss_plot.append(loss.item())
                     vloss_plot.append(vloss)
+                    vacc_plot.append(accuracy)
         
     print(f'Finished Training the {name}.')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
     if not wb:
-        return tloss_plot, vloss_plot, lr_plot
+        return tloss_plot, vloss_plot, vacc_plot
 
 # Evaluation metrics Function
 def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:

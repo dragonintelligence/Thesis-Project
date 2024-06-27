@@ -57,10 +57,8 @@ if WANDB:
     wandb.init(entity="dragonintelligence", project=f"Eaticx{model}")
 
 #A
-epochs: list = [i for i in range(NR_EPOCHS)]
-steps: list = [i for i in range(NR_EPOCHS * len(train_dataloader))]
-epochs2: list = [i for i in range(2 * NR_EPOCHS)]
-steps2: list = [i for i in range(2 * NR_EPOCHS * len(train_dataloader))]
+epochs: list = [i + 1 for i in range(NR_EPOCHS)]
+epochs2: list = [i + 1 for i in range(2 * NR_EPOCHS)]
 
 ## ViT
 # Train
@@ -87,17 +85,17 @@ plt.figure(1)
 plt.plot(epochs, vectors[0], label="Training Loss")
 plt.plot(epochs, vectors[1], label="Validation Loss")
 plt.legend(loc="upper left")
-plt.xlabel("Nr. training steps")
+plt.xlabel("Nr. Epochs")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("B1loss.png")
+plt.savefig("A1loss.png")
 # Plot 2
 plt.figure(2)
-plt.plot(steps, vectors[2])
-plt.xlabel("Nr. steps")
-plt.ylabel("Learning Rate")
+plt.plot(epochs, vectors[2])
+plt.xlabel("Nr. Epochs")
+plt.ylabel("Validation Accuracy")
 plt.show()
-plt.savefig("B1lr.png")
+plt.savefig("A1lr.png")
 
 ## Per 5 epochs
 # Train
@@ -126,14 +124,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("B2loss.png")
+plt.savefig("A2loss.png")
 # Plot 2
 plt.figure(4)
-plt.plot(steps, vectors[2])
-plt.xlabel("Nr. steps")
-plt.ylabel("Learning Rate")
+plt.plot(epochs, vectors[2])
+plt.xlabel("Nr. Epochs")
+plt.ylabel("Validation Accuracy")
 plt.show()
-plt.savefig("B2lr.png")
+plt.savefig("A2lr.png")
 
 ## Per 10 epochs
 # Train
@@ -157,19 +155,19 @@ print()
 # Plot 1
 plt.figure(5)
 plt.plot(epochs2, vectors[0], label="Training Loss")
-plt.plot(epochs, vectors[1], label="Validation Loss")
+plt.plot(epochs2, vectors[1], label="Validation Loss")
 plt.legend(loc="upper left")
-plt.xlabel("Nr. training steps")
+plt.xlabel("Nr. Epochs")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("B3loss.png")
+plt.savefig("A3loss.png")
 # Plot 2
 plt.figure(6)
-plt.plot(steps2, vectors[2])
-plt.xlabel("Nr. steps")
-plt.ylabel("Learning Rate")
+plt.plot(epochs2, vectors[2])
+plt.xlabel("Nr. Epochs")
+plt.ylabel("Validation Accuracy")
 plt.show()
-plt.savefig("B3lr.png")
+plt.savefig("A3lr.png")
 
 ## Per 2 10 epochs
 # Train
@@ -195,14 +193,14 @@ plt.figure(7)
 plt.plot(epochs2, vectors[0], label="Training Loss")
 plt.plot(epochs2, vectors[1], label="Validation Loss")
 plt.legend(loc="upper left")
-plt.xlabel("Nr. training steps")
+plt.xlabel("Nr. Epochs")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("B4loss.png")
+plt.savefig("A4loss.png")
 # Plot 2
 plt.figure(8)
-plt.plot(steps2, vectors[2])
-plt.xlabel("Nr. steps")
-plt.ylabel("Learning Rate")
+plt.plot(epochs2, vectors[2])
+plt.xlabel("Nr. Epochs")
+plt.ylabel("Validation Accuracy")
 plt.show()
-plt.savefig("B4lr.png")
+plt.savefig("A4lr.png")
