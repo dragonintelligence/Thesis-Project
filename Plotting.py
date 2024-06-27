@@ -32,7 +32,7 @@ VIT_FF: int = 4 # from paper ViT-Base
 VIT_DROPOUT: float = 0.2 # from paper VIT
 NR_CLASSES: int = 2
 NR_EPOCHS: int = 5
-LR: float = 0.0003 # from paper VIT for global average ViT
+LR: float = 0.0006
 CRITERION = nn.CrossEntropyLoss()
 
 # Data Preprocessing
@@ -88,14 +88,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("1loss.png")
+plt.savefig("B1loss.png")
 # Plot 2
 plt.figure(2)
 plt.plot(steps, vectors[2])
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("1lr.png")
+plt.savefig("B1lr.png")
 
 ## Per 5 epochs
 # Train
@@ -124,14 +124,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("2loss.png")
+plt.savefig("B2loss.png")
 # Plot 2
 plt.figure(4)
 plt.plot(steps, vectors[2])
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("2lr.png")
+plt.savefig("B2lr.png")
 
 ## Per 10 epochs
 # Train
@@ -160,14 +160,14 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("3loss.png")
+plt.savefig("B3loss.png")
 # Plot 2
 plt.figure(6)
 plt.plot(steps, vectors[2])
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("3lr.png")
+plt.savefig("B3lr.png")
 
 ## Per 2 10 epochs
 # Train
@@ -196,11 +196,11 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("4loss.png")
+plt.savefig("B4loss.png")
 # Plot 2
 plt.figure(8)
 plt.plot(steps, vectors[2])
 plt.xlabel("Nr. steps")
 plt.ylabel("Learning Rate")
 plt.show()
-plt.savefig("4lr.png")
+plt.savefig("B4lr.png")
