@@ -107,7 +107,7 @@ vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_data
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
 # Test
 print("Test Set Evaluation:")
-path: str = './eaticx-ViT.pth'
+path: str = './eaticx-Perceiver.pth'
 net.load_state_dict(torch.load(path))
 tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
 print(f"- Test loss: {tloss:.3f}")
@@ -143,7 +143,7 @@ vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_data
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
 # Test
 print("Test Set Evaluation:")
-path: str = './eaticx-ViT.pth'
+path: str = './eaticx-Perceiver.pth'
 net.load_state_dict(torch.load(path))
 tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
 print(f"- Test loss: {tloss:.3f}")
@@ -171,7 +171,7 @@ plt.savefig("3lr.png")
 
 ## Per 2 10 epochs
 # Train
-print("Per 4 blocks 2 transformers 8 heads 128 emb & lat 10 epochs")
+print("Per 4 blocks 2 transformers 8 heads 64 emb 128 lat 10 epochs")
 print()
 net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
         64, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
@@ -179,7 +179,7 @@ vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_data
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
 # Test
 print("Test Set Evaluation:")
-path: str = './eaticx-ViT.pth'
+path: str = './eaticx-Perceiver.pth'
 net.load_state_dict(torch.load(path))
 tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
 print(f"- Test loss: {tloss:.3f}")
