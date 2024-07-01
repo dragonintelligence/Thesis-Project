@@ -17,7 +17,7 @@ from datasets import load_dataset
 from torchvision.transforms import v2
 
 # Training Function
-def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str, wb: bool) -> None:
+def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip: int, eval: int, device: str, verbose: bool) -> None:
     """
     Function that trains a chosen Neural Network.
     Parameters: Neural Network object, name for save file, training dataset,
@@ -28,10 +28,9 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
     optimizer = optim.Adam(lr=lr, params=net.parameters())
     scheduler = lr_scheduler.OneCycleLR(max_lr=lr, optimizer=optimizer, total_steps=len(t) * epochs)
     print(f"Start training the {name}.")
-    if not wb:
-        tloss_plot: list = []
-        vloss_plot: list = []
-        vacc_plot: list = []
+    tloss_plot: list = []
+    vloss_plot: list = []
+    vacc_plot: list = []
     for epoch in range(epochs):
         for i, data in enumerate(t, 0):  
             # get the inputs; data is a list of [inputs, labels]
@@ -47,49 +46,28 @@ def training_loop(net, name: str, t, v, epochs: int, criterion, lr: float, clip:
             grad_norm = torch.nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
             scheduler.step()
-            
-            # Weights and Biases Log
-            if wb:
-                wandb.log(
-                    {
-                        "Training Loss": loss.item(),
-                        "Learning Rate": optimizer.param_groups[0]["lr"],
-                        "epoch": epoch,
-                        "grad_norm": grad_norm
-                    }
-                )
 
             if (i + 1) % (len(t) // eval) == 0 or i == len(t) - 1:
                 # Calculating & printing
                 accuracy, vloss = evaluation(v, net, criterion, "val", device)
-                print(f'Epoch {epoch + 1}:')
-                print(f'- Training loss: {loss.item():.3f}')
-                print(f"- Validation loss: {vloss:.3f}")
-                print(f"- Validation accuracy: {accuracy:.3f}")
-
-                # Weights & Biases log
-                if wb:
-                    wandb.log(
-                        {
-                            "Validation Loss": vloss,
-                            "Validation Accuracy": accuracy
-                        }
-                    )
-                else:
-                    tloss_plot.append(loss.item())
-                    vloss_plot.append(vloss)
-                    vacc_plot.append(accuracy)
+                if verbose:
+                    print(f'Epoch {epoch + 1}:')
+                    print(f'- Training loss: {loss.item():.3f}')
+                    print(f"- Validation loss: {vloss:.3f}")
+                    print(f"- Validation accuracy: {accuracy:.3f}")
+                tloss_plot.append(loss.item())
+                vloss_plot.append(vloss)
+                vacc_plot.append(accuracy)
         
     print(f'Finished Training the {name}.')
     PATH: str = f'./eaticx-{name}.pth'
     torch.save(net.state_dict(), PATH)
-    if not wb:
-        return tloss_plot, vloss_plot, vacc_plot
+    return tloss_plot, vloss_plot, vacc_plot
 
 # Evaluation metrics Function
 def evaluation(dataloader, net, criterion, type: str, device: str) -> tuple:
     net.eval()
-    TP, TN, FP, FN = (0,0,0,0)
+    TP, TN, FP, FN = (0, 0, 0, 0)
     correct: int = 0
     total: int = 0
     loss: float = 0.0

@@ -17,29 +17,34 @@ from datasets import load_dataset
 from torchvision.transforms import v2
 
 # Constants
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PATH: str = "dragonintelligence/CIFAKE-image-dataset"
-WANDB: bool = False
-CHANNELS: int = 3
-IMG_SIZE: int = 32
-PATCH_SIZE: int = 4
-BATCH_SIZE: int = 256
-VAL_TIMES: int = 2
-SPLIT: int = 0.5
-GRADIENT_CLIP: int = 1
-EMB: list = [64, 128]
-VIT_HEADS: list = [8, 12, 16]
-VIT_FF: int = 4 # from paper ViT-Base
-VIT_DEPTH: list = [8, 12, 24]
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # current device
+PATH: str = "dragonintelligence/CIFAKE-image-dataset" # CIFAKE dataset source
+VERBOSE: bool = False # whether or not to print training & validation metrics every epoch
+CHANNELS: int = 3 # RGB image channels
+IMG_SIZE: int = 32 # CIFAKE image height / width
+PATCH_SIZE: int = 4 # for ViT
+BATCH_SIZE: int = 256 # arbitrary
+VAL_TIMES: int = 1
+SPLIT: int = 0.5 # Validation & Test data 
+GRADIENT_CLIP: int = 1 # from paper ViT
+EMB: list = [64, 128] # to test
+VIT_HEADS: list = [8, 12, 16] # to test
+VIT_FF: int = 4 # from paper ViT
+VIT_DEPTH: list = [8, 12, 24] # to test
 VIT_DROPOUT: float = 0.2 # from paper VIT
-NR_CLASSES: int = 2
-NR_EPOCHS: int = 5
-LR: float = 0.0004
-CRITERION = nn.CrossEntropyLoss()
+NR_CLASSES: int = 2 # binary classification
+NR_EPOCHS: int = 5 # arbitrary
+LR: float = 0.0006 # maximum learning rate in OneCycleLR scheduler
+CRITERION = nn.CrossEntropyLoss() # loss function
 
 # Data Preprocessing
 def batch_transform(batch):
-    # turn the images into PyTorch tensors & normalize the images to [-1, 1] range
+    """
+    Function that converts images from HuggingFace dataset to tensors using torch 
+    transforms and normalizes the images to [-1, 1] range.
+    Input: image collection
+    Output: normalized image tensor
+    """
     main_transform = v2.Compose([v2.ToTensor(), v2.Lambda(lambda tensor: (tensor * 2) - 1)])
     batch["img"] = [main_transform(x.convert("RGB")) for x in batch["image"]]
     del batch["image"]
@@ -54,12 +59,9 @@ val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False, drop_last
 test = val_test_split["test"].with_transform(batch_transform)
 test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 
-# WANDB
-if WANDB:
-    wandb.init(entity="dragonintelligence", project=f"Eaticx{model}")
-
 # Vision Transformer Experiments
 print("Vision Transformer Experiments")
+loss: dict = {}
 accuracy: dict = {}
 f1_score: dict = {}
 for depth in VIT_DEPTH:
@@ -72,7 +74,7 @@ for depth in VIT_DEPTH:
                     PATCH_SIZE, emb, heads, VIT_FF, depth, VIT_DROPOUT, NR_CLASSES)\
                         .to(DEVICE)
                 Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \
-                    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
+                    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
                 # Test Accuracy 
                 print("Test Set Evaluation:")
                 path: str = './eaticx-ViT.pth'
@@ -84,15 +86,15 @@ for depth in VIT_DEPTH:
                 print(f"- Test recall: {trec:.3f}")
                 print(f"- Test F1 score: {tf1:.3f}")
                 print()
+                loss[f"{depth} {heads} {emb}"] = tloss
                 accuracy[f"{depth} {heads} {emb}"] = tacc
                 f1_score[f"{depth} {heads} {emb}"] = tf1
             except:
                 print("CUDA out of memory.")
                 print()
 
-# Getting top 5
-accuracy = dict(sorted(accuracy.items(), key=lambda item: item[1], reverse=True))
-f1_score = dict(sorted(f1_score.items(), key=lambda item: item[1], reverse=True))
-print("Top 5 ViT configurations:")
-for i in range(5):
-    print(f"{i}) ViT - {list(f1_score.keys())[i]}: accuracy {accuracy[list(f1_score.keys())[i]] * 100 :.3f} % and F1 score {list(f1_score.values())[i] :.3f}")
+# Visualize results sorted by lowest test loss
+loss = dict(sorted(loss.items(), key=lambda item: item[1]))
+print("ViT Configurations sorted by test loss:")
+for i in range(len(list(loss.keys()))):
+    print(f"{i + 1}) ViT - {list(loss.keys())[i]}: loss {list(loss.values())[i]}, accuracy {accuracy[list(loss.keys())[i]] * 100 :.3f} %, F1 score {f1_score[list(loss.keys())[i]] :.3f}")

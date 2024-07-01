@@ -18,26 +18,39 @@ from torchvision.transforms import v2
 import matplotlib.pyplot as plt
 
 # Constants
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PATH: str = "dragonintelligence/CIFAKE-image-dataset"
-WANDB: bool = False
-CHANNELS: int = 3
-IMG_SIZE: int = 32
-PATCH_SIZE: int = 4
-BATCH_SIZE: int = 256
-VAL_TIMES: int = 1
-SPLIT: int = 0.5
-GRADIENT_CLIP: int = 1
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu") # current device
+PATH: str = "dragonintelligence/CIFAKE-image-dataset" # CIFAKE dataset source
+VERBOSE: bool = True # whether or not to print training & validation metrics every epoch
+CHANNELS: int = 3 # RGB image channels
+IMG_SIZE: int = 32 # CIFAKE image height / width
+PATCH_SIZE: int = 4 # for ViT
+BATCH_SIZE: int = 256 # arbitrary
+VAL_TIMES: int = 1 # evaluate once per epoch
+SPLIT: int = 0.5 # Validation & Test data 
+GRADIENT_CLIP: int = 1 # from paper ViT
+VIT_EMB: int = 128 # BEST
+VIT_HEADS: int = 8 # BEST
+VIT_DEPTH: int = 8 # BEST
 VIT_FF: int = 4 # from paper ViT-Base
 VIT_DROPOUT: float = 0.2 # from paper VIT
-NR_CLASSES: int = 2
-NR_EPOCHS: int = 5
-LR: float = 0.0006
-CRITERION = nn.CrossEntropyLoss()
+PER_EMB: int = 128 # BEST
+PER_LAT: int = 128 # BEST
+PER_HEADS: int = 8  # BEST
+PER_DEPTH: int = 4  # BEST
+PER_LAT_DEPTH: int = 2 # BEST
+NR_CLASSES: int = 2 # binary classification
+NR_EPOCHS: int = 5 # arbitrary
+LR: float = 0.0006 # maximum learning rate in OneCycleLR scheduler
+CRITERION = nn.CrossEntropyLoss() # loss function
 
 # Data Preprocessing
 def batch_transform(batch):
-    # turn the images into PyTorch tensors & normalize the images to [-1, 1] range
+    """
+    Function that converts images from HuggingFace dataset to tensors using torch 
+    transforms and normalizes the images to [-1, 1] range.
+    Input: image collection
+    Output: normalized image tensor
+    """
     main_transform = v2.Compose([v2.ToTensor(), v2.Lambda(lambda tensor: (tensor * 2) - 1)])
     batch["img"] = [main_transform(x.convert("RGB")) for x in batch["image"]]
     del batch["image"]
@@ -52,23 +65,19 @@ val_dataloader = DataLoader(val, batch_size=BATCH_SIZE, shuffle=False, drop_last
 test = val_test_split["test"].with_transform(batch_transform)
 test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 
-# WANDB
-if WANDB:
-    wandb.init(entity="dragonintelligence", project=f"Eaticx{model}")
-
-#A
+# For Plots
 epochs: list = [i + 1 for i in range(NR_EPOCHS)]
 epochs2: list = [i + 1 for i in range(2 * NR_EPOCHS)]
 
 ## ViT
 # Train
-print("ViT 8 blocks 8 heads 128 emb")
+print(f"ViT {VIT_DEPTH} blocks {VIT_HEADS} heads {VIT_EMB} emb")
 print()
 net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-    PATCH_SIZE, 128, 8, VIT_FF, 8, VIT_DROPOUT, NR_CLASSES)\
+    PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, VIT_DROPOUT, NR_CLASSES)\
         .to(DEVICE)
 vectors = Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \
-    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
 # Test
 print("Test Set Evaluation:")
 path: str = './eaticx-ViT.pth'
@@ -88,23 +97,23 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. Epochs")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("A1loss.png")
+plt.savefig("ViT Loss.png")
 # Plot 2
 plt.figure(2)
 plt.plot(epochs, vectors[2])
 plt.xlabel("Nr. Epochs")
 plt.ylabel("Validation Accuracy")
 plt.show()
-plt.savefig("A1lr.png")
+plt.savefig("ViT Accuracy.png")
 
-## Per 5 epochs
+## Per
 # Train
-print("Per 4 blocks 2 transformers 8 heads 128 emb & lat 5 epochs")
+print(f"Per {PER_DEPTH} blocks {PER_LAT_DEPTH} transformers {PER_HEADS} heads {PER_EMB} emb {PER_LAT}")
 print()
 net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-        128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
+        PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LAT, NR_CLASSES).to(DEVICE)
 vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
 # Test
 print("Test Set Evaluation:")
 path: str = './eaticx-Perceiver.pth'
@@ -124,83 +133,11 @@ plt.legend(loc="upper left")
 plt.xlabel("Nr. training steps")
 plt.ylabel("Cross Entropy Loss")
 plt.show()
-plt.savefig("A2loss.png")
+plt.savefig("Per Loss.png")
 # Plot 2
 plt.figure(4)
 plt.plot(epochs, vectors[2])
 plt.xlabel("Nr. Epochs")
 plt.ylabel("Validation Accuracy")
 plt.show()
-plt.savefig("A2lr.png")
-
-## Per 10 epochs
-# Train
-print("Per 4 blocks 2 transformers 8 heads 128 emb & lat 10 epochs")
-print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-        128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
-vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, 2 * NR_EPOCHS, \
-    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
-# Test
-print("Test Set Evaluation:")
-path: str = './eaticx-Perceiver.pth'
-net.load_state_dict(torch.load(path))
-tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-print(f"- Test loss: {tloss:.3f}")
-print(f"- Test accuracy: {tacc:.3f}")
-print(f"- Test precision: {tprec:.3f}")
-print(f"- Test recall: {trec:.3f}")
-print(f"- Test F1 score: {tf1:.3f}")
-print()
-# Plot 1
-plt.figure(5)
-plt.plot(epochs2, vectors[0], label="Training Loss")
-plt.plot(epochs2, vectors[1], label="Validation Loss")
-plt.legend(loc="upper left")
-plt.xlabel("Nr. Epochs")
-plt.ylabel("Cross Entropy Loss")
-plt.show()
-plt.savefig("A3loss.png")
-# Plot 2
-plt.figure(6)
-plt.plot(epochs2, vectors[2])
-plt.xlabel("Nr. Epochs")
-plt.ylabel("Validation Accuracy")
-plt.show()
-plt.savefig("A3lr.png")
-
-## Per 2 10 epochs
-# Train
-print("Per 4 blocks 2 transformers 8 heads 64 emb 128 lat 10 epochs")
-print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-        64, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
-vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, 2 * NR_EPOCHS, \
-    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, WANDB)
-# Test
-print("Test Set Evaluation:")
-path: str = './eaticx-Perceiver.pth'
-net.load_state_dict(torch.load(path))
-tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-print(f"- Test loss: {tloss:.3f}")
-print(f"- Test accuracy: {tacc:.3f}")
-print(f"- Test precision: {tprec:.3f}")
-print(f"- Test recall: {trec:.3f}")
-print(f"- Test F1 score: {tf1:.3f}")
-print()
-# Plot 1
-plt.figure(7)
-plt.plot(epochs2, vectors[0], label="Training Loss")
-plt.plot(epochs2, vectors[1], label="Validation Loss")
-plt.legend(loc="upper left")
-plt.xlabel("Nr. Epochs")
-plt.ylabel("Cross Entropy Loss")
-plt.show()
-plt.savefig("A4loss.png")
-# Plot 2
-plt.figure(8)
-plt.plot(epochs2, vectors[2])
-plt.xlabel("Nr. Epochs")
-plt.ylabel("Validation Accuracy")
-plt.show()
-plt.savefig("A4lr.png")
+plt.savefig("Per Accuracy.png")
