@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver All Configurations Experiment"
+echo "Perceiver All Configurations Experiment - but less configurations"
 python /var/scratch/mdr317/thesis/Per-Configurations.py
