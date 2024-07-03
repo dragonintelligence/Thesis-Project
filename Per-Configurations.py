@@ -27,8 +27,7 @@ VAL_TIMES: int = 2
 SPLIT: int = 0.5 # Validation & Test data 
 GRADIENT_CLIP: int = 1 # from paper ViT
 EMB: list = [64, 128] # to test
-PER_LAT: list = [64, 128] # to test
-PER_HEADS: list = [8, 12, 16] # to test
+PER_HEADS: list = [8, 12] # to test
 PER_DEPTH: list = [1, 2, 4, 8] # to test
 NR_CLASSES: int = 2 # binary classification
 NR_EPOCHS: int = 5 # arbitrary
@@ -67,31 +66,30 @@ for pdepth in PER_DEPTH:
     tdepth = 8 // pdepth
     for heads in PER_HEADS:
         for emb in EMB:
-            for lat in PER_LAT:
-                print(f"{pdepth} perceiver blocks: each has 1 cross attention and {tdepth} blocks of {heads}-headed self attention, embedding size of {emb} and latent size of {lat}")
+            print(f"{pdepth} perceiver blocks: each has 1 cross attention and {tdepth} blocks of {heads}-headed self attention, embedding & latent size of {emb}")
+            print()
+            try:
+                net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+                    emb, emb, heads, pdepth, tdepth, NR_CLASSES).to(DEVICE)
+                Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
+                    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
+                # Test Accuracy 
+                print("Test Set Evaluation:")
+                path: str = './eaticx-Perceiver.pth'
+                net.load_state_dict(torch.load(path))
+                tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+                print(f"- Test loss: {tloss:.3f}")
+                print(f"- Test accuracy: {tacc:.3f}")
+                print(f"- Test precision: {tprec:.3f}")
+                print(f"- Test recall: {trec:.3f}")
+                print(f"- Test F1 score: {tf1:.3f}")
                 print()
-                try:
-                    net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-                        emb, lat, heads, pdepth, tdepth, NR_CLASSES).to(DEVICE)
-                    Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-                        CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
-                    # Test Accuracy 
-                    print("Test Set Evaluation:")
-                    path: str = './eaticx-Perceiver.pth'
-                    net.load_state_dict(torch.load(path))
-                    tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-                    print(f"- Test loss: {tloss:.3f}")
-                    print(f"- Test accuracy: {tacc:.3f}")
-                    print(f"- Test precision: {tprec:.3f}")
-                    print(f"- Test recall: {trec:.3f}")
-                    print(f"- Test F1 score: {tf1:.3f}")
-                    print()
-                    loss[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tloss
-                    accuracy[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tacc
-                    f1_score[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tf1
-                except:
-                    print("CUDA out of memory.")
-                    print()
+                loss[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tloss
+                accuracy[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tacc
+                f1_score[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tf1
+            except:
+                print("CUDA out of memory.")
+                print()
 
 # Visualize results sorted by lowest test loss
 loss = dict(sorted(loss.items(), key=lambda item: item[1]))
