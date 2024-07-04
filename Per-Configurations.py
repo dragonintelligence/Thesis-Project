@@ -83,9 +83,9 @@ for pdepth in PER_DEPTH:
             print(f"- Test recall: {trec:.3f}")
             print(f"- Test F1 score: {tf1:.3f}")
             print()
-            loss[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tloss
-            accuracy[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tacc
-            f1_score[f"{pdepth} {tdepth} {heads} {emb} {lat}"] = tf1
+            loss[f"{pdepth} {tdepth} {heads} {emb} {emb}"] = tloss
+            accuracy[f"{pdepth} {tdepth} {heads} {emb} {emb}"] = tacc
+            f1_score[f"{pdepth} {tdepth} {heads} {emb} {emb}"] = tf1
             # except:
             #     print("CUDA out of memory.")
             #     print()
