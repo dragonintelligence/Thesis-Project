@@ -31,7 +31,7 @@ PER_HEADS: list = [8, 12] # to test
 PER_DEPTH: list = [1, 2, 4, 8] # to test
 NR_CLASSES: int = 2 # binary classification
 NR_EPOCHS: int = 5 # arbitrary
-LR: float = 0.0006 # maximum learning rate in OneCycleLR scheduler
+LR: float = 0.0003 # maximum learning rate in OneCycleLR scheduler
 CRITERION = nn.CrossEntropyLoss() # loss function
 
 # Data Preprocessing
