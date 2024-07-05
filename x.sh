@@ -11,5 +11,5 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Perceiver Last Configurations"
+echo "Perceiver low batch size AND low LR"
 python /var/scratch/mdr317/thesis/x.py
