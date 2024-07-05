@@ -11,5 +11,8 @@ source /var/scratch/mdr317/miniconda3/bin/activate
 conda activate
 cd /var/scratch/mdr317/thesis
 
-echo "Plot best ViT and best Perceiver 10 Epochs"
-python /var/scratch/mdr317/thesis/PlottingBest10Epochs.py
+echo "Plot best ViT 5 Epochs"
+python /var/scratch/mdr317/thesis/PlottingViT5Epochs.py
+
+echo "Plot best ViT 10 Epochs"
+python /var/scratch/mdr317/thesis/PlottingViT10Epochs.py

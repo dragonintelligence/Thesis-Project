@@ -69,7 +69,6 @@ test_dataloader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, drop_la
 epochs: list = [i + 1 for i in range(NR_EPOCHS)]
 epochs2: list = [i + 1 for i in range(2 * NR_EPOCHS)]
 
-## ViT
 # Train
 print(f"ViT {VIT_DEPTH} blocks {VIT_HEADS} heads {VIT_EMB} emb")
 print()
@@ -105,39 +104,3 @@ plt.xlabel("Nr. Epochs")
 plt.ylabel("Validation Accuracy")
 plt.show()
 plt.savefig("ViT Accuracy.png")
-
-## Per
-# Train
-print(f"Per {PER_DEPTH} blocks {PER_LAT_DEPTH} transformers {PER_HEADS} heads {PER_EMB} emb {PER_LAT}")
-print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE // 2, \
-        PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LAT, NR_CLASSES).to(DEVICE)
-vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-    CRITERION, LR / 2, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
-# Test
-print("Test Set Evaluation:")
-path: str = './eaticx-Perceiver.pth'
-net.load_state_dict(torch.load(path))
-tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-print(f"- Test loss: {tloss:.3f}")
-print(f"- Test accuracy: {tacc:.3f}")
-print(f"- Test precision: {tprec:.3f}")
-print(f"- Test recall: {trec:.3f}")
-print(f"- Test F1 score: {tf1:.3f}")
-print()
-# Plot 1
-plt.figure(3)
-plt.plot(epochs, vectors[0], label="Training Loss")
-plt.plot(epochs, vectors[1], label="Validation Loss")
-plt.legend(loc="upper left")
-plt.xlabel("Nr. training steps")
-plt.ylabel("Cross Entropy Loss")
-plt.show()
-plt.savefig("Per Loss.png")
-# Plot 2
-plt.figure(4)
-plt.plot(epochs, vectors[2])
-plt.xlabel("Nr. Epochs")
-plt.ylabel("Validation Accuracy")
-plt.show()
-plt.savefig("Per Accuracy.png")
