@@ -73,7 +73,7 @@ epochs2: list = [i + 1 for i in range(2 * NR_EPOCHS)]
 print(f"Per {PER_DEPTH} blocks {PER_LAT_DEPTH} transformers {PER_HEADS} heads {PER_EMB} emb {PER_LAT}")
 print()
 net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-        PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LAT, NR_CLASSES).to(DEVICE)
+        PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LAT_DEPTH, NR_CLASSES).to(DEVICE)
 vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
 # Test
