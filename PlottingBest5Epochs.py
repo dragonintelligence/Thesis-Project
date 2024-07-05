@@ -110,10 +110,10 @@ plt.savefig("ViT Accuracy.png")
 # Train
 print(f"Per {PER_DEPTH} blocks {PER_LAT_DEPTH} transformers {PER_HEADS} heads {PER_EMB} emb {PER_LAT}")
 print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE / 2, \
         PER_EMB, PER_LAT, PER_HEADS, PER_DEPTH, PER_LAT, NR_CLASSES).to(DEVICE)
 vectors = Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
+    CRITERION, LR / 2, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
 # Test
 print("Test Set Evaluation:")
 path: str = './eaticx-Perceiver.pth'
