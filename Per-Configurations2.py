@@ -22,7 +22,7 @@ PATH: str = "dragonintelligence/CIFAKE-image-dataset" # CIFAKE dataset source
 VERBOSE: bool = False # whether or not to print training & validation metrics every epoch
 CHANNELS: int = 3 # RGB image channels
 IMG_SIZE: int = 32 # CIFAKE image height / width
-BATCH_SIZE: int = 128 # arbitrary
+BATCH_SIZE: int = 128 # halved
 VAL_TIMES: int = 2
 SPLIT: int = 0.5 # Validation & Test data 
 GRADIENT_CLIP: int = 1 # from paper ViT
@@ -31,7 +31,7 @@ PER_HEADS: list = [8, 12] # to test
 PER_DEPTH: list = [1, 2, 4, 8] # to test
 NR_CLASSES: int = 2 # binary classification
 NR_EPOCHS: int = 5 # arbitrary
-LR: float = 0.0003 # maximum learning rate in OneCycleLR scheduler
+LR: float = 0.0003 # halved
 CRITERION = nn.CrossEntropyLoss() # loss function
 
 # Data Preprocessing
