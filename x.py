@@ -83,6 +83,27 @@ loss[f"4 2 8 128"] = tloss
 accuracy[f"4 2 8 128"] = tacc
 f1_score[f"4 2 8 128"] = tf1
 
+print("B) 2 4 12 128")
+print()
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+    128, 128, 12, 2, 4, NR_CLASSES).to(DEVICE)
+Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
+# Test Accuracy 
+print("Test Set Evaluation:")
+path: str = './eaticx-Perceiver.pth'
+net.load_state_dict(torch.load(path))
+tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+print(f"- Test loss: {tloss:.3f}")
+print(f"- Test accuracy: {tacc:.3f}")
+print(f"- Test precision: {tprec:.3f}")
+print(f"- Test recall: {trec:.3f}")
+print(f"- Test F1 score: {tf1:.3f}")
+print()
+loss[f"2 4 12 128"] = tloss
+accuracy[f"2 4 12 128"] = tacc
+f1_score[f"2 4 12 128"] = tf1
+
 # print("A) 4 2 12 128")
 # print()
 # net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
