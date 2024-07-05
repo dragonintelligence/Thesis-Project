@@ -62,10 +62,10 @@ loss: dict = {}
 accuracy: dict = {}
 f1_score: dict = {}
 
-print("A) 4 2 8 128")
+print("A) 4 2 12 128")
 print()
 net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-    128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
+    128, 128, 12, 4, 2, NR_CLASSES).to(DEVICE)
 Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
 # Test Accuracy 
@@ -79,72 +79,51 @@ print(f"- Test precision: {tprec:.3f}")
 print(f"- Test recall: {trec:.3f}")
 print(f"- Test F1 score: {tf1:.3f}")
 print()
-loss[f"4 2 8 128"] = tloss
-accuracy[f"4 2 8 128"] = tacc
-f1_score[f"4 2 8 128"] = tf1
+loss[f"4 2 12 128"] = tloss
+accuracy[f"4 2 12 128"] = tacc
+f1_score[f"4 2 12 128"] = tf1
 
-# print("A) 4 2 12 128")
-# print()
-# net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-#     128, 128, 12, 4, 2, NR_CLASSES).to(DEVICE)
-# Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-#     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
-# # Test Accuracy 
-# print("Test Set Evaluation:")
-# path: str = './eaticx-Perceiver.pth'
-# net.load_state_dict(torch.load(path))
-# tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-# print(f"- Test loss: {tloss:.3f}")
-# print(f"- Test accuracy: {tacc:.3f}")
-# print(f"- Test precision: {tprec:.3f}")
-# print(f"- Test recall: {trec:.3f}")
-# print(f"- Test F1 score: {tf1:.3f}")
-# print()
-# loss[f"4 2 12 128"] = tloss
-# accuracy[f"4 2 12 128"] = tacc
-# f1_score[f"4 2 12 128"] = tf1
+print("B) 8 1 8 128")
+print()
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+    128, 128, 8, 8, 1, NR_CLASSES).to(DEVICE)
+Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
+# Test Accuracy 
+print("Test Set Evaluation:")
+path: str = './eaticx-Perceiver.pth'
+net.load_state_dict(torch.load(path))
+tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+print(f"- Test loss: {tloss:.3f}")
+print(f"- Test accuracy: {tacc:.3f}")
+print(f"- Test precision: {tprec:.3f}")
+print(f"- Test recall: {trec:.3f}")
+print(f"- Test F1 score: {tf1:.3f}")
+print()
+loss[f"8 1 8 128"] = tloss
+accuracy[f"8 1 8 128"] = tacc
+f1_score[f"8 1 8 128"] = tf1
 
-# print("B) 8 1 8 128")
-# print()
-# net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-#     128, 128, 8, 8, 1, NR_CLASSES).to(DEVICE)
-# Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-#     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
-# # Test Accuracy 
-# print("Test Set Evaluation:")
-# path: str = './eaticx-Perceiver.pth'
-# net.load_state_dict(torch.load(path))
-# tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-# print(f"- Test loss: {tloss:.3f}")
-# print(f"- Test accuracy: {tacc:.3f}")
-# print(f"- Test precision: {tprec:.3f}")
-# print(f"- Test recall: {trec:.3f}")
-# print(f"- Test F1 score: {tf1:.3f}")
-# print()
-# loss[f"8 1 8 128"] = tloss
-# accuracy[f"8 1 8 128"] = tacc
-# f1_score[f"8 1 8 128"] = tf1
-
-# print("C) 8 1 12 128")
-# print()
-# net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
-#     128, 128, 12, 8, 1, NR_CLASSES).to(DEVICE)
-# Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
-#     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
-# # Test Accuracy 
-# print("Test Set Evaluation:")
-# path: str = './eaticx-Perceiver.pth'
-# net.load_state_dict(torch.load(path))
-# tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
-# print(f"- Test loss: {tloss:.3f}")
-# print(f"- Test accuracy: {tacc:.3f}")
-# print(f"- Test precision: {tprec:.3f}")
-# print(f"- Test recall: {trec:.3f}")
-# print(f"- Test F1 score: {tf1:.3f}")
-# print()
-# loss[f"8 1 12 128"] = tloss
-# accuracy[f"8 1 12 128"] = tacc
-# f1_score[f"8 1 12 128"] = tf1
+print("C) 8 1 12 128")
+print()
+net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+    128, 128, 12, 8, 1, NR_CLASSES).to(DEVICE)
+Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
+    CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
+# Test Accuracy 
+print("Test Set Evaluation:")
+path: str = './eaticx-Perceiver.pth'
+net.load_state_dict(torch.load(path))
+tacc, tprec, trec, tf1, tloss = Experiments.evaluation(test_dataloader, net, CRITERION, "test", DEVICE)
+print(f"- Test loss: {tloss:.3f}")
+print(f"- Test accuracy: {tacc:.3f}")
+print(f"- Test precision: {tprec:.3f}")
+print(f"- Test recall: {trec:.3f}")
+print(f"- Test F1 score: {tf1:.3f}")
+print()
+loss[f"8 1 12 128"] = tloss
+accuracy[f"8 1 12 128"] = tacc
+f1_score[f"8 1 12 128"] = tf1
 
 # Visualize results sorted by lowest test loss
 loss = dict(sorted(loss.items(), key=lambda item: item[1]))
