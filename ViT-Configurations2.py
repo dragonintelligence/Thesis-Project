@@ -23,7 +23,7 @@ VERBOSE: bool = False # whether or not to print training & validation metrics ev
 CHANNELS: int = 3 # RGB image channels
 IMG_SIZE: int = 32 # CIFAKE image height / width
 PATCH_SIZE: int = 4 # for ViT
-BATCH_SIZE: int = 256 # arbitrary
+BATCH_SIZE: int = 128 # halved
 VAL_TIMES: int = 1
 SPLIT: int = 0.5 # Validation & Test data 
 GRADIENT_CLIP: int = 1 # from paper ViT
@@ -34,7 +34,7 @@ VIT_DEPTH: list = [8, 12, 24] # to test
 VIT_DROPOUT: float = 0.2 # from paper VIT
 NR_CLASSES: int = 2 # binary classification
 NR_EPOCHS: int = 5 # arbitrary
-LR: float = 0.0006 # maximum learning rate in OneCycleLR scheduler
+LR: float = 0.0003 # halved
 CRITERION = nn.CrossEntropyLoss() # loss function
 
 # Data Preprocessing
