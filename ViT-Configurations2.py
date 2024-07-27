@@ -1,7 +1,7 @@
 ## Main Script
 
 # Importing scripts
-import Eaticx # the neural network objects
+import Modules # the neural network objects
 import Experiments # train & test functions
 
 # Importing more libraries
@@ -68,7 +68,7 @@ f1_score: dict = {}
 print("A) ViT 24 12 128")
 print()
 try:
-    net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+    net = Modules.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
         PATCH_SIZE, 128, 12, VIT_FF, 24, VIT_DROPOUT, NR_CLASSES)\
             .to(DEVICE)
     Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \
@@ -94,7 +94,7 @@ except:
 print("B) ViT 24 16 128")
 print()
 try:
-    net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+    net = Modules.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
         PATCH_SIZE, 128, 16, VIT_FF, 24, VIT_DROPOUT, NR_CLASSES)\
             .to(DEVICE)
     Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \

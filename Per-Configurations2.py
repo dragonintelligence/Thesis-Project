@@ -1,7 +1,7 @@
 ## Main Script
 
 # Importing scripts
-import Eaticx # the neural network objects
+import Modules # the neural network objects
 import Experiments # train & test functions
 
 # Importing more libraries
@@ -65,7 +65,7 @@ f1_score: dict = {}
 ## ONLY RAN ONCE
 # print("A) 4 2 8 128")
 # print()
-# net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+# net = Modules.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
 #     128, 128, 8, 4, 2, NR_CLASSES).to(DEVICE)
 # Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
 #     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
@@ -86,7 +86,7 @@ f1_score: dict = {}
 
 # print("B) 2 4 12 128")
 # print()
-# net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+# net = Modules.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
 #     128, 128, 12, 2, 4, NR_CLASSES).to(DEVICE)
 # Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
 #     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
@@ -108,7 +108,7 @@ f1_score: dict = {}
 #E NEED 5 TIMES
 print("A) 4 2 12 128")
 print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+net = Modules.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
     128, 128, 12, 4, 2, NR_CLASSES).to(DEVICE)
 Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
@@ -129,7 +129,7 @@ f1_score[f"4 2 12 128"] = tf1
 
 print("B) 8 1 8 128")
 print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+net = Modules.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
     128, 128, 8, 8, 1, NR_CLASSES).to(DEVICE)
 Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)
@@ -150,7 +150,7 @@ f1_score[f"8 1 8 128"] = tf1
 
 print("C) 8 1 12 128")
 print()
-net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+net = Modules.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
     128, 128, 12, 8, 1, NR_CLASSES).to(DEVICE)
 Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)

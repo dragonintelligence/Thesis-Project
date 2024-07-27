@@ -1,7 +1,7 @@
 ## Main Script
 
 # Importing scripts
-import Eaticx # the neural network objects
+import Modules # the neural network objects
 import Experiments # train & test functions
 
 # Importing more libraries
@@ -72,7 +72,7 @@ epochs2: list = [i + 1 for i in range(2 * NR_EPOCHS)]
 # Train
 print(f"ViT {VIT_DEPTH} blocks {VIT_HEADS} heads {VIT_EMB} emb")
 print()
-net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+net = Modules.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
     PATCH_SIZE, VIT_EMB, VIT_HEADS, VIT_FF, VIT_DEPTH, VIT_DROPOUT, NR_CLASSES)\
         .to(DEVICE)
 vectors = Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \

@@ -1,7 +1,7 @@
 ## Main Script
 
 # Importing scripts
-import Eaticx # the neural network objects
+import Modules # the neural network objects
 import Experiments # train & test functions
 
 # Importing more libraries
@@ -70,7 +70,7 @@ for depth in VIT_DEPTH:
             print(f"{depth} blocks of {heads}-headed self attention and {emb} embedding size")
             print()
             try:
-                net = Eaticx.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+                net = Modules.VisionTransformer(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                     PATCH_SIZE, emb, heads, VIT_FF, depth, VIT_DROPOUT, NR_CLASSES)\
                         .to(DEVICE)
                 Experiments.training_loop(net, "ViT", train_dataloader, val_dataloader, NR_EPOCHS, \

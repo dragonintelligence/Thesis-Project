@@ -1,7 +1,7 @@
 ## Main Script
 
 # Importing scripts
-import Eaticx # the neural network objects
+import Modules # the neural network objects
 import Experiments # train & test functions
 
 # Importing more libraries
@@ -69,7 +69,7 @@ for pdepth in PER_DEPTH:
             try:
                 print(f"{pdepth} perceiver blocks: each has 1 cross attention and {tdepth} blocks of {heads}-headed self attention, embedding & latent size of {emb}")
                 print()
-                net = Eaticx.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
+                net = Modules.Perceiver(DEVICE, CHANNELS, IMG_SIZE, BATCH_SIZE, \
                     emb, emb, heads, pdepth, tdepth, NR_CLASSES).to(DEVICE)
                 Experiments.training_loop(net, "Perceiver", train_dataloader, val_dataloader, NR_EPOCHS, \
                     CRITERION, LR, GRADIENT_CLIP, VAL_TIMES, DEVICE, VERBOSE)

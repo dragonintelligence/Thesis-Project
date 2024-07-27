@@ -15,7 +15,7 @@ class CrossAttention(nn.Module):
     def __init__(self, embedding: int) -> None:
         """
         Initializing (multi-headed) Self Attention object.
-        Parameters: embedding (= 2 * input channels)
+        Parameters: embedding (= input channels)
         """
         # Initialization
         super().__init__()
@@ -32,7 +32,7 @@ class CrossAttention(nn.Module):
             - Keys (batch)
             - Values (batch)
         Parameter: batch of dimension (batch_size, nr pixels, embedding size),
-        latent of dimension (batch size, nr latents, latent size)
+        latent of dimension (batch size, latent size, embedding size)
         Returns: result of cross attention (same dimensionality as latent)
         """
 
